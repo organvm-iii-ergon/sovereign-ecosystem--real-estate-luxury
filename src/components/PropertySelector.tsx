@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Property } from '@/lib/types'
-import { Check, Camera, ArrowLeftRight, X, Search, Sparkles } from 'lucide-react'
+import { Check, Camera, ArrowLeftRight, X, Search, Sparkles, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { Input } from './ui/input'
 import { ScrollArea } from './ui/scroll-area'
+import { Slider } from './ui/slider'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { soundManager } from '@/lib/sound-manager'
 
 interface PropertySelectorProps {
@@ -15,6 +18,13 @@ interface PropertySelectorProps {
   maxSelection: number
   onConfirm: (selectedProperties: Property[]) => void
   onClose: () => void
+}
+
+interface FilterState {
+  priceRange: [number, number]
+  bedrooms: number | null
+  bathrooms: number | null
+  location: string
 }
 
 export function PropertySelector({ 
@@ -26,12 +36,63 @@ export function PropertySelector({
 }: PropertySelectorProps) {
   const [selectedProperties, setSelectedProperties] = useState<Property[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
+  
+  const maxPrice = Math.max(...properties.map(p => p.price))
+  const minPrice = Math.min(...properties.map(p => p.price))
+  
+  const [filters, setFilters] = useState<FilterState>({
+    priceRange: [minPrice, maxPrice],
+    bedrooms: null,
+    bathrooms: null,
+    location: ''
+  })
 
-  const filteredProperties = properties.filter(property =>
-    property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    property.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    property.state.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const uniqueLocations = Array.from(new Set(
+    properties.map(p => `${p.city}, ${p.state}`)
+  )).sort()
+
+  const filteredProperties = properties.filter(property => {
+    const matchesSearch = 
+      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      property.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      property.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      property.address.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesPrice = 
+      property.price >= filters.priceRange[0] && 
+      property.price <= filters.priceRange[1]
+    
+    const matchesBedrooms = 
+      filters.bedrooms === null || property.bedrooms === filters.bedrooms
+    
+    const matchesBathrooms = 
+      filters.bathrooms === null || property.bathrooms === filters.bathrooms
+    
+    const matchesLocation = 
+      filters.location === '' || 
+      filters.location === 'all' ||
+      `${property.city}, ${property.state}` === filters.location
+
+    return matchesSearch && matchesPrice && matchesBedrooms && matchesBathrooms && matchesLocation
+  })
+
+  const activeFiltersCount = [
+    filters.priceRange[0] !== minPrice || filters.priceRange[1] !== maxPrice,
+    filters.bedrooms !== null,
+    filters.bathrooms !== null,
+    filters.location !== '' && filters.location !== 'all'
+  ].filter(Boolean).length
+
+  const resetFilters = () => {
+    setFilters({
+      priceRange: [minPrice, maxPrice],
+      bedrooms: null,
+      bathrooms: null,
+      location: ''
+    })
+    soundManager.play('glassTap')
+  }
 
   const toggleProperty = (property: Property) => {
     soundManager.play('glassTap')
@@ -99,16 +160,160 @@ export function PropertySelector({
           </Button>
         </div>
 
-        <div className="px-6 py-4 border-b border-border/40">
+        <div className="px-6 py-4 border-b border-border/40 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by title, city, or state..."
+              placeholder="Search by title, city, state, or address..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 pr-24"
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowFilters(!showFilters)
+                soundManager.play('glassTap')
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 gap-2"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Filters
+              {activeFiltersCount > 0 && (
+                <Badge className="ml-1 bg-rose-blush dark:bg-moonlit-lavender text-white px-1.5 py-0 text-xs min-w-[20px]">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
           </div>
+
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="overflow-hidden"
+              >
+                <Card className="p-4 bg-muted/30 border-border/40">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold text-foreground">Advanced Filters</h3>
+                      {activeFiltersCount > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={resetFilters}
+                          className="text-xs h-7"
+                        >
+                          Reset All
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground flex items-center justify-between">
+                        <span>Price Range</span>
+                        <span className="text-foreground font-semibold">
+                          ${filters.priceRange[0].toLocaleString()} - ${filters.priceRange[1].toLocaleString()}
+                        </span>
+                      </label>
+                      <Slider
+                        value={filters.priceRange}
+                        onValueChange={(value) => setFilters({ ...filters, priceRange: value as [number, number] })}
+                        min={minPrice}
+                        max={maxPrice}
+                        step={10000}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Bedrooms</label>
+                        <Select
+                          value={filters.bedrooms?.toString() || 'all'}
+                          onValueChange={(value) => {
+                            soundManager.play('glassTap')
+                            setFilters({ 
+                              ...filters, 
+                              bedrooms: value === 'all' ? null : parseInt(value) 
+                            })
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Any" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any</SelectItem>
+                            {Array.from(new Set(properties.map(p => p.bedrooms))).sort((a, b) => a - b).map(beds => (
+                              <SelectItem key={beds} value={beds.toString()}>
+                                {beds} {beds === 1 ? 'bed' : 'beds'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Bathrooms</label>
+                        <Select
+                          value={filters.bathrooms?.toString() || 'all'}
+                          onValueChange={(value) => {
+                            soundManager.play('glassTap')
+                            setFilters({ 
+                              ...filters, 
+                              bathrooms: value === 'all' ? null : parseInt(value) 
+                            })
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Any" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Any</SelectItem>
+                            {Array.from(new Set(properties.map(p => p.bathrooms))).sort((a, b) => a - b).map(baths => (
+                              <SelectItem key={baths} value={baths.toString()}>
+                                {baths} {baths === 1 ? 'bath' : 'baths'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground">Location</label>
+                      <Select
+                        value={filters.location || 'all'}
+                        onValueChange={(value) => {
+                          soundManager.play('glassTap')
+                          setFilters({ 
+                            ...filters, 
+                            location: value === 'all' ? '' : value 
+                          })
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="All locations" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All locations</SelectItem>
+                          {uniqueLocations.map(location => (
+                            <SelectItem key={location} value={location}>
+                              {location}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <ScrollArea className="flex-1 p-6">
@@ -141,8 +346,15 @@ export function PropertySelector({
         </ScrollArea>
 
         <div className="flex items-center justify-between p-6 border-t border-border/40 bg-muted/20">
-          <div className="text-sm text-muted-foreground">
-            {selectedProperties.length} of {maxSelection} selected
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-muted-foreground">
+              {selectedProperties.length} of {maxSelection} selected
+            </div>
+            {filteredProperties.length !== properties.length && (
+              <Badge variant="secondary" className="text-xs">
+                {filteredProperties.length} of {properties.length} showing
+              </Badge>
+            )}
           </div>
           <div className="flex gap-3">
             <Button variant="outline" onClick={onClose}>

@@ -4,14 +4,30 @@ import { useKV } from '@github/spark/hooks'
 import { Property, Document } from '@/lib/types'
 import { 
   X, Camera, RotateCcw, Maximize2, Minimize2, Info, Eye, EyeOff,
-  Home, DollarSign, Ruler, MapPin, Sparkles, ZoomIn, ZoomOut, Save, Download
+  Home, DollarSign, Ruler, MapPin, Sparkles, ZoomIn, ZoomOut, Save, Download,
+  Pencil, Trash2, Check
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Badge } from './ui/badge'
 import { Slider } from './ui/slider'
+import { Input } from './ui/input'
+import { ScrollArea } from './ui/scroll-area'
 import { soundManager } from '@/lib/sound-manager'
 import { toast } from 'sonner'
+
+interface MeasurementPoint {
+  x: number
+  y: number
+}
+
+interface Measurement {
+  id: string
+  start: MeasurementPoint
+  end: MeasurementPoint
+  distance: number
+  label?: string
+}
 
 interface ARPropertyViewerProps {
   property: Property
@@ -37,6 +53,13 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
   const [documents, setDocuments] = useKV<Document[]>('documents', [])
   const [isSaving, setIsSaving] = useState(false)
   
+  const [measurementMode, setMeasurementMode] = useState(false)
+  const [measurements, setMeasurements] = useState<Measurement[]>([])
+  const [currentMeasurement, setCurrentMeasurement] = useState<{ start: MeasurementPoint } | null>(null)
+  const [scaleFactor, setScaleFactor] = useState(1)
+  const [editingLabel, setEditingLabel] = useState<string | null>(null)
+  const [labelInput, setLabelInput] = useState('')
+  
   const lastTouchDistance = useRef<number>(0)
   const lastTouchAngle = useRef<number>(0)
   const gestureStartScale = useRef<number>(1)
@@ -58,7 +81,7 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [stream, scale, rotation, position, showOverlay])
+  }, [stream, scale, rotation, position, showOverlay, measurements, currentMeasurement, measurementMode])
 
   const startCamera = async () => {
     try {
@@ -249,10 +272,144 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
       ctx.restore()
     }
 
+    if (measurementMode || measurements.length > 0) {
+      ctx.save()
+      ctx.lineWidth = 3
+      ctx.strokeStyle = 'rgba(58, 255, 165, 0.9)'
+      ctx.fillStyle = 'rgba(58, 255, 165, 0.9)'
+
+      measurements.forEach((measurement) => {
+        ctx.beginPath()
+        ctx.moveTo(measurement.start.x, measurement.start.y)
+        ctx.lineTo(measurement.end.x, measurement.end.y)
+        ctx.stroke()
+
+        ctx.beginPath()
+        ctx.arc(measurement.start.x, measurement.start.y, 6, 0, 2 * Math.PI)
+        ctx.fill()
+        
+        ctx.beginPath()
+        ctx.arc(measurement.end.x, measurement.end.y, 6, 0, 2 * Math.PI)
+        ctx.fill()
+
+        const midX = (measurement.start.x + measurement.end.x) / 2
+        const midY = (measurement.start.y + measurement.end.y) / 2
+        
+        const distanceText = `${(measurement.distance * scaleFactor).toFixed(1)} ft`
+        const labelText = measurement.label ? `${measurement.label}: ${distanceText}` : distanceText
+        
+        ctx.font = 'bold 18px Outfit'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        
+        const textMetrics = ctx.measureText(labelText)
+        const padding = 8
+        const boxWidth = textMetrics.width + padding * 2
+        const boxHeight = 28
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+        ctx.fillRect(midX - boxWidth / 2, midY - boxHeight / 2, boxWidth, boxHeight)
+        
+        ctx.strokeStyle = 'rgba(58, 255, 165, 0.9)'
+        ctx.lineWidth = 2
+        ctx.strokeRect(midX - boxWidth / 2, midY - boxHeight / 2, boxWidth, boxHeight)
+        
+        ctx.fillStyle = 'rgba(58, 255, 165, 1)'
+        ctx.fillText(labelText, midX, midY)
+      })
+
+      if (currentMeasurement) {
+        const canvas = canvasRef.current
+        if (canvas) {
+          const rect = canvas.getBoundingClientRect()
+          const mouseX = position.x
+          const mouseY = position.y
+
+          ctx.setLineDash([10, 5])
+          ctx.strokeStyle = 'rgba(255, 255, 100, 0.7)'
+          ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.moveTo(currentMeasurement.start.x, currentMeasurement.start.y)
+          ctx.lineTo(mouseX, mouseY)
+          ctx.stroke()
+          ctx.setLineDash([])
+
+          ctx.beginPath()
+          ctx.arc(currentMeasurement.start.x, currentMeasurement.start.y, 6, 0, 2 * Math.PI)
+          ctx.fillStyle = 'rgba(255, 255, 100, 0.9)'
+          ctx.fill()
+        }
+      }
+
+      ctx.restore()
+    }
+
     animationFrameRef.current = requestAnimationFrame(renderFrame)
   }
 
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!measurementMode) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * canvas.width
+    const y = ((e.clientY - rect.top) / rect.height) * canvas.height
+
+    if (!currentMeasurement) {
+      setCurrentMeasurement({ start: { x, y } })
+      soundManager.play('glassTap')
+    } else {
+      const distance = Math.sqrt(
+        Math.pow(x - currentMeasurement.start.x, 2) + 
+        Math.pow(y - currentMeasurement.start.y, 2)
+      )
+
+      const newMeasurement: Measurement = {
+        id: `measurement-${Date.now()}`,
+        start: currentMeasurement.start,
+        end: { x, y },
+        distance: distance / 50
+      }
+
+      setMeasurements(prev => [...prev, newMeasurement])
+      setCurrentMeasurement(null)
+      soundManager.play('success')
+      toast.success('Measurement added', {
+        description: `${(distance / 50 * scaleFactor).toFixed(1)} ft`
+      })
+    }
+  }
+
+  const deleteMeasurement = (id: string) => {
+    setMeasurements(prev => prev.filter(m => m.id !== id))
+    soundManager.play('glassTap')
+    toast.success('Measurement deleted')
+  }
+
+  const clearMeasurements = () => {
+    setMeasurements([])
+    setCurrentMeasurement(null)
+    soundManager.play('glassTap')
+    toast.success('All measurements cleared')
+  }
+
+  const addLabelToMeasurement = (id: string, label: string) => {
+    setMeasurements(prev => 
+      prev.map(m => m.id === id ? { ...m, label } : m)
+    )
+    setEditingLabel(null)
+    setLabelInput('')
+    soundManager.play('success')
+  }
+
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (measurementMode) {
+      handleCanvasClick(e)
+      return
+    }
+    
     setIsDragging(true)
     setDragStart({
       x: e.clientX - position.x,
@@ -261,7 +418,7 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
   }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isDragging) {
+    if (isDragging && !measurementMode) {
       setPosition({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y
@@ -274,6 +431,41 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
   }
 
   const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (measurementMode && e.touches.length === 1) {
+      const touch = e.touches[0]
+      const canvas = canvasRef.current
+      if (!canvas) return
+
+      const rect = canvas.getBoundingClientRect()
+      const x = ((touch.clientX - rect.left) / rect.width) * canvas.width
+      const y = ((touch.clientY - rect.top) / rect.height) * canvas.height
+
+      if (!currentMeasurement) {
+        setCurrentMeasurement({ start: { x, y } })
+        soundManager.play('glassTap')
+      } else {
+        const distance = Math.sqrt(
+          Math.pow(x - currentMeasurement.start.x, 2) + 
+          Math.pow(y - currentMeasurement.start.y, 2)
+        )
+
+        const newMeasurement: Measurement = {
+          id: `measurement-${Date.now()}`,
+          start: currentMeasurement.start,
+          end: { x, y },
+          distance: distance / 50
+        }
+
+        setMeasurements(prev => [...prev, newMeasurement])
+        setCurrentMeasurement(null)
+        soundManager.play('success')
+        toast.success('Measurement added', {
+          description: `${(distance / 50 * scaleFactor).toFixed(1)} ft`
+        })
+      }
+      return
+    }
+
     if (e.touches.length === 1) {
       setIsDragging(true)
       setDragStart({
@@ -302,6 +494,8 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
   }
 
   const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (measurementMode) return
+    
     if (e.touches.length === 1 && isDragging) {
       setPosition({
         x: e.touches[0].clientX - dragStart.x,
@@ -380,7 +574,7 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
         size: `${Math.round(dataUrl.length / 1024)} KB`
       }
 
-      setDocuments((currentDocs) => [...currentDocs, newDocument])
+      setDocuments((currentDocs) => [...(currentDocs || []), newDocument])
       
       soundManager.play('success')
       toast.success('AR snapshot saved to Private Vault', {
@@ -515,6 +709,36 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
 
             <div className="flex gap-2">
               <Button
+                variant={measurementMode ? 'default' : 'secondary'}
+                size="icon"
+                onClick={() => {
+                  setMeasurementMode(!measurementMode)
+                  if (!measurementMode) {
+                    setShowOverlay(false)
+                  }
+                  soundManager.play('glassTap')
+                  toast.success(
+                    measurementMode ? 'Measurement mode disabled' : 'Tap to start measuring',
+                    { description: measurementMode ? '' : 'Tap two points to measure distance' }
+                  )
+                }}
+                className={`bg-card/90 backdrop-blur-xl ${measurementMode ? 'ring-2 ring-green-400' : ''}`}
+                title="Measurement tool"
+              >
+                <Ruler className="w-5 h-5" />
+              </Button>
+              {measurements.length > 0 && (
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={clearMeasurements}
+                  className="bg-card/90 backdrop-blur-xl"
+                  title="Clear all measurements"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              )}
+              <Button
                 variant="secondary"
                 size="icon"
                 onClick={() => {
@@ -593,6 +817,98 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
                     </Badge>
                   )}
                 </div>
+
+                {measurements.length > 0 && (
+                  <div className="space-y-2 border-t border-border pt-4">
+                    <div className="flex items-center justify-between">
+                      <h5 className="text-sm font-semibold text-foreground">Measurements</h5>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Scale Factor:</span>
+                        <Input
+                          type="number"
+                          value={scaleFactor}
+                          onChange={(e) => setScaleFactor(parseFloat(e.target.value) || 1)}
+                          className="w-20 h-7 text-xs"
+                          step="0.1"
+                          min="0.1"
+                        />
+                      </div>
+                    </div>
+                    <ScrollArea className="max-h-32">
+                      <div className="space-y-2">
+                        {measurements.map((measurement) => (
+                          <div
+                            key={measurement.id}
+                            className="flex items-center justify-between bg-muted/30 rounded-lg p-2 text-sm"
+                          >
+                            <div className="flex-1">
+                              {editingLabel === measurement.id ? (
+                                <div className="flex gap-2">
+                                  <Input
+                                    value={labelInput}
+                                    onChange={(e) => setLabelInput(e.target.value)}
+                                    placeholder="Label..."
+                                    className="h-7 text-xs"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        addLabelToMeasurement(measurement.id, labelInput)
+                                      } else if (e.key === 'Escape') {
+                                        setEditingLabel(null)
+                                        setLabelInput('')
+                                      }
+                                    }}
+                                    autoFocus
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => addLabelToMeasurement(measurement.id, labelInput)}
+                                    className="h-7 px-2"
+                                  >
+                                    <Check className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-foreground font-medium">
+                                    {(measurement.distance * scaleFactor).toFixed(1)} ft
+                                  </span>
+                                  {measurement.label && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      {measurement.label}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-1">
+                              {!editingLabel && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingLabel(measurement.id)
+                                    setLabelInput(measurement.label || '')
+                                  }}
+                                  className="h-7 px-2"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteMeasurement(measurement.id)}
+                                className="h-7 px-2 hover:bg-destructive/10 hover:text-destructive"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
