@@ -8,6 +8,7 @@ import { MarketActivityIndicator } from './MarketActivityIndicator'
 import { LivePriceDisplay } from './LivePriceDisplay'
 import { PriceSparkline } from './PriceSparkline'
 import { PortfolioValueTracker } from './PortfolioValueTracker'
+import { MarketVolatilityControls } from './MarketVolatilityControls'
 
 interface AgentDashboardProps {
   properties: Property[]
@@ -114,6 +115,8 @@ export function AgentDashboard({ properties, watchlistProperties, riskProperties
           </section>
         </div>
       </main>
+
+      <MarketVolatilityControls />
     </div>
   )
 }

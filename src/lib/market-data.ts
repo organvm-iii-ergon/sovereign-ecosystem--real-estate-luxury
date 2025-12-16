@@ -21,6 +21,12 @@ export interface MarketTicker {
   trend: 'up' | 'down' | 'stable'
 }
 
+export interface MarketConfig {
+  volatility: number
+  updateFrequency: number
+  isPaused: boolean
+}
+
 class MarketDataService {
   private marketData: Map<string, MarketData> = new Map()
   private subscribers: Map<string, Set<(data: MarketData) => void>> = new Map()
@@ -30,6 +36,8 @@ class MarketDataService {
   private tickerInterval: number | null = null
   private baseUpdateFrequency = 3000
   private volatility = 0.02
+  private updateFrequencyMultiplier = 1
+  private configSubscribers: Set<(config: MarketConfig) => void> = new Set()
 
   initialize(properties: Property[]) {
     properties.forEach(property => {
@@ -59,6 +67,8 @@ class MarketDataService {
 
   private startUpdates() {
     if (this.updateInterval) return
+
+    const updateFrequency = this.baseUpdateFrequency * this.updateFrequencyMultiplier
 
     this.updateInterval = window.setInterval(() => {
       this.marketData.forEach((data, propertyId) => {
@@ -91,7 +101,7 @@ class MarketDataService {
         
         this.notifySubscribers(propertyId, data)
       })
-    }, this.baseUpdateFrequency) as unknown as number
+    }, updateFrequency) as unknown as number
   }
 
   private startTickerUpdates() {
@@ -177,6 +187,36 @@ class MarketDataService {
 
   setVolatility(level: number) {
     this.volatility = Math.max(0.001, Math.min(0.1, level))
+    this.notifyConfigSubscribers()
+  }
+
+  setUpdateFrequency(multiplier: number) {
+    this.updateFrequencyMultiplier = Math.max(0.1, Math.min(10, multiplier))
+    this.pause()
+    this.resume()
+    this.notifyConfigSubscribers()
+  }
+
+  getConfig(): MarketConfig {
+    return {
+      volatility: this.volatility,
+      updateFrequency: this.baseUpdateFrequency * this.updateFrequencyMultiplier,
+      isPaused: this.updateInterval === null
+    }
+  }
+
+  subscribeConfig(callback: (config: MarketConfig) => void) {
+    this.configSubscribers.add(callback)
+    callback(this.getConfig())
+
+    return () => {
+      this.configSubscribers.delete(callback)
+    }
+  }
+
+  private notifyConfigSubscribers() {
+    const config = this.getConfig()
+    this.configSubscribers.forEach(callback => callback(config))
   }
 
   pause() {
@@ -188,17 +228,20 @@ class MarketDataService {
       clearInterval(this.tickerInterval)
       this.tickerInterval = null
     }
+    this.notifyConfigSubscribers()
   }
 
   resume() {
     this.startUpdates()
     this.startTickerUpdates()
+    this.notifyConfigSubscribers()
   }
 
   cleanup() {
     this.pause()
     this.subscribers.clear()
     this.tickerSubscribers.clear()
+    this.configSubscribers.clear()
     this.marketData.clear()
   }
 }

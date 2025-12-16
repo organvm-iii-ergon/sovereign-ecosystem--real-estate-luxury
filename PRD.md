@@ -13,11 +13,11 @@ This platform requires dual user flows (agent/client), sophisticated compliance 
 ## Essential Features
 
 **Live Market Data Feeds**
-- Functionality: Real-time price tracking with simulated market movements, trend indicators, sparkline charts, and market index tickers showing property values updating every 3 seconds
-- Purpose: Provides agents and clients with dynamic market intelligence to make informed investment decisions and track portfolio performance
+- Functionality: Real-time price tracking with simulated market movements, trend indicators, sparkline charts, and market index tickers showing property values updating dynamically with adjustable volatility and update frequency controls
+- Purpose: Provides agents and clients with dynamic market intelligence to make informed investment decisions and track portfolio performance, with ability to control simulation parameters for testing and demonstration
 - Trigger: Automatically initializes when properties load, runs continuously in background
-- Progression: Properties load → Market data service initializes → Price updates begin streaming → Live price displays animate changes → Sparkline charts update → Market tickers scroll across dashboard → Trend indicators show up/down/stable movements
-- Success criteria: Prices update smoothly without jank, animations feel premium and intentional, trend indicators accurately reflect price movements, market sentiment calculations are correct, no performance degradation with multiple properties
+- Progression: Properties load → Market data service initializes → Price updates begin streaming → Live price displays animate changes → Sparkline charts update → Market tickers scroll across dashboard → Trend indicators show up/down/stable movements → Users can access floating control panel to adjust volatility (0.1%-10%), update speed (0.3s-30s), and pause/resume market simulation
+- Success criteria: Prices update smoothly without jank, animations feel premium and intentional, trend indicators accurately reflect price movements, market sentiment calculations are correct, no performance degradation with multiple properties, volatility controls respond instantly, update frequency changes apply without interruption
 
 **Agent Dashboard (Portfolio Shield)**
 - Functionality: Blind database architecture that separates client PII (local) from asset data (cloud) with automated compliance checking
@@ -73,6 +73,7 @@ This platform requires dual user flows (agent/client), sophisticated compliance 
 - **No Matching Recommendations**: Display empty state in AI Concierge suggesting preference adjustments, show general market insights
 - **Stale Preferences**: Prompt user to review preferences after 30 days or when match scores consistently low
 - **Multiple High-Priority Insights**: Prioritize by urgency (high > medium > low), then by insight type (alerts > opportunities > recommendations > advice)
+- **Market Simulation Extreme Values**: Constrain volatility slider to prevent unrealistic market swings, cap update frequency to prevent performance issues, persist control settings between sessions
 
 ## Design Direction
 
@@ -146,6 +147,10 @@ Animations should feel physics-based and luxurious, with easing curves that mimi
   - Download (document actions)
   - Clock (time-bomb links)
   - Sparkles (curated badge accent)
+  - Settings (market controls)
+  - Zap (volatility indicator)
+  - Activity (market activity)
+  - Play/Pause (market simulation control)
 - **Spacing**: 
   - Container padding: px-6 (mobile), px-12 (desktop)
   - Card gaps: gap-4 (tight grids), gap-8 (property cards)

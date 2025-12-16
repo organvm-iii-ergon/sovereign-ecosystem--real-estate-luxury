@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, Activity, BarChart3 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Card } from './ui/card'
 import { PortfolioValueTracker } from './PortfolioValueTracker'
+import { MarketVolatilityControls } from './MarketVolatilityControls'
 import { Property } from '@/lib/types'
 
 interface MarketOverviewProps {
@@ -183,6 +184,8 @@ export function MarketOverview({ properties = [] }: MarketOverviewProps) {
           </div>
         </div>
       </Card>
+
+      <MarketVolatilityControls />
     </div>
   )
 }

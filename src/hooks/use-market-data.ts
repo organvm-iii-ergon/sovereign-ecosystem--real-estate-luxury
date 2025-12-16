@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { marketDataService, MarketData, MarketTicker } from '@/lib/market-data'
+import { marketDataService, MarketData, MarketTicker, MarketConfig } from '@/lib/market-data'
 
 export function useMarketData(propertyId: string) {
   const [marketData, setMarketData] = useState<MarketData | undefined>(
@@ -25,4 +25,17 @@ export function useMarketTickers() {
   }, [])
 
   return tickers
+}
+
+export function useMarketConfig() {
+  const [config, setConfig] = useState<MarketConfig>(
+    marketDataService.getConfig()
+  )
+
+  useEffect(() => {
+    const unsubscribe = marketDataService.subscribeConfig(setConfig)
+    return unsubscribe
+  }, [])
+
+  return config
 }
