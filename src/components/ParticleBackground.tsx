@@ -9,12 +9,55 @@ interface Particle {
   size: number
   opacity: number
   hue: number
+  isConstellation?: boolean
 }
+
+interface ConstellationPattern {
+  name: string
+  points: { x: number; y: number }[]
+  connections: [number, number][]
+}
+
+const CONSTELLATIONS: ConstellationPattern[] = [
+  {
+    name: 'crown',
+    points: [
+      { x: 0.5, y: 0.2 },
+      { x: 0.42, y: 0.25 },
+      { x: 0.58, y: 0.25 },
+      { x: 0.38, y: 0.3 },
+      { x: 0.62, y: 0.3 },
+    ],
+    connections: [[0, 1], [0, 2], [1, 3], [2, 4]],
+  },
+  {
+    name: 'house',
+    points: [
+      { x: 0.2, y: 0.5 },
+      { x: 0.2, y: 0.7 },
+      { x: 0.3, y: 0.7 },
+      { x: 0.3, y: 0.5 },
+      { x: 0.25, y: 0.45 },
+    ],
+    connections: [[0, 1], [1, 2], [2, 3], [3, 0], [0, 4], [3, 4]],
+  },
+  {
+    name: 'diamond',
+    points: [
+      { x: 0.8, y: 0.4 },
+      { x: 0.75, y: 0.45 },
+      { x: 0.8, y: 0.5 },
+      { x: 0.85, y: 0.45 },
+    ],
+    connections: [[0, 1], [1, 2], [2, 3], [3, 0]],
+  },
+]
 
 export function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
-  const animationFrameRef = useRef<number>()
+  const constellationParticlesRef = useRef<Map<string, Particle[]>>(new Map())
+  const animationFrameRef = useRef<number | undefined>(undefined)
   const { theme, mounted } = useTheme()
 
   useEffect(() => {
@@ -24,15 +67,36 @@ export function ParticleBackground() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
+    const initializeConstellations = () => {
+      const constellationMap = new Map<string, Particle[]>()
+      
+      CONSTELLATIONS.forEach(constellation => {
+        const particles = constellation.points.map(point => ({
+          x: point.x * canvas.width,
+          y: point.y * canvas.height,
+          vx: (Math.random() - 0.5) * 0.1,
+          vy: (Math.random() - 0.5) * 0.1,
+          size: 2.5,
+          opacity: 0.5,
+          hue: theme === 'dark' ? 280 : 340,
+          isConstellation: true,
+        }))
+        constellationMap.set(constellation.name, particles)
+      })
+      
+      constellationParticlesRef.current = constellationMap
+    }
+
     const resizeCanvas = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
+      initializeConstellations()
     }
 
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
 
-    const particleCount = 50
+    const particleCount = 60
     const particles: Particle[] = []
 
     for (let i = 0; i < particleCount; i++) {
@@ -93,7 +157,7 @@ export function ParticleBackground() {
           const distance = Math.sqrt(dx * dx + dy * dy)
 
           if (distance < 150) {
-            const opacity = (1 - distance / 150) * 0.1
+            const opacity = (1 - distance / 150) * 0.08
             ctx.strokeStyle = theme === 'dark' 
               ? `rgba(180, 150, 220, ${opacity})` 
               : `rgba(224, 136, 170, ${opacity})`
@@ -103,6 +167,72 @@ export function ParticleBackground() {
             ctx.lineTo(p2.x, p2.y)
             ctx.stroke()
           }
+        })
+      })
+
+      CONSTELLATIONS.forEach(constellation => {
+        const constellationParticles = constellationParticlesRef.current.get(constellation.name)
+        if (!constellationParticles) return
+
+        constellationParticles.forEach((particle, idx) => {
+          const originalPoint = constellation.points[idx]
+          const targetX = originalPoint.x * canvas.width
+          const targetY = originalPoint.y * canvas.height
+          
+          particle.x += particle.vx + (targetX - particle.x) * 0.02
+          particle.y += particle.vy + (targetY - particle.y) * 0.02
+
+          const gradient = ctx.createRadialGradient(
+            particle.x,
+            particle.y,
+            0,
+            particle.x,
+            particle.y,
+            particle.size * 4
+          )
+          
+          if (theme === 'dark') {
+            gradient.addColorStop(0, `hsla(${particle.hue}, 80%, 70%, ${particle.opacity * 0.9})`)
+            gradient.addColorStop(0.5, `hsla(${particle.hue}, 80%, 60%, ${particle.opacity * 0.5})`)
+            gradient.addColorStop(1, `hsla(${particle.hue}, 80%, 50%, 0)`)
+          } else {
+            gradient.addColorStop(0, `hsla(${particle.hue}, 70%, 75%, ${particle.opacity * 0.9})`)
+            gradient.addColorStop(0.5, `hsla(${particle.hue}, 70%, 65%, ${particle.opacity * 0.5})`)
+            gradient.addColorStop(1, `hsla(${particle.hue}, 70%, 55%, 0)`)
+          }
+
+          ctx.fillStyle = gradient
+          ctx.beginPath()
+          ctx.arc(particle.x, particle.y, particle.size * 4, 0, Math.PI * 2)
+          ctx.fill()
+        })
+
+        constellation.connections.forEach(([startIdx, endIdx]) => {
+          const p1 = constellationParticles[startIdx]
+          const p2 = constellationParticles[endIdx]
+          if (!p1 || !p2) return
+
+          const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y)
+          
+          if (theme === 'dark') {
+            gradient.addColorStop(0, `rgba(180, 150, 220, 0.4)`)
+            gradient.addColorStop(0.5, `rgba(200, 170, 230, 0.5)`)
+            gradient.addColorStop(1, `rgba(180, 150, 220, 0.4)`)
+          } else {
+            gradient.addColorStop(0, `rgba(224, 136, 170, 0.3)`)
+            gradient.addColorStop(0.5, `rgba(234, 156, 190, 0.4)`)
+            gradient.addColorStop(1, `rgba(224, 136, 170, 0.3)`)
+          }
+          
+          ctx.strokeStyle = gradient
+          ctx.lineWidth = 1.5
+          ctx.shadowBlur = 8
+          ctx.shadowColor = theme === 'dark' ? 'rgba(180, 150, 220, 0.3)' : 'rgba(224, 136, 170, 0.3)'
+          ctx.beginPath()
+          ctx.moveTo(p1.x, p1.y)
+          ctx.lineTo(p2.x, p2.y)
+          ctx.stroke()
+          ctx.shadowBlur = 0
         })
       })
 
@@ -124,6 +254,7 @@ export function ParticleBackground() {
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0"
       style={{ mixBlendMode: theme === 'dark' ? 'lighten' : 'multiply' }}
+      aria-hidden="true"
     />
   )
 }

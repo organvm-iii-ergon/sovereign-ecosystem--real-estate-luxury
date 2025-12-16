@@ -21,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs'
 import { Volume2, VolumeX } from 'lucide-react'
 import { soundManager } from './lib/sound-manager'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTheme } from './hooks/use-theme'
 
 function App() {
   const [properties] = useKV<Property[]>('properties', [])
@@ -28,6 +29,11 @@ function App() {
   const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const { theme } = useTheme()
+
+  useEffect(() => {
+    soundManager.setTheme(theme as 'light' | 'dark')
+  }, [theme])
 
   useEffect(() => {
     if (properties && properties.length > 0) {
@@ -142,14 +148,23 @@ function App() {
         className="min-h-screen bg-gradient-to-br from-pearl-white via-background to-lavender-mist/20 dark:from-midnight-blue dark:via-background dark:to-moonlit-indigo/30 transition-colors duration-700"
       >
         <Tabs defaultValue="feed" className="w-full">
-          <TabsList className="w-full justify-center bg-card/80 backdrop-blur-xl border-b border-border/50 rounded-none sticky top-0 z-40 shadow-sm transition-colors duration-500">
-            <TabsTrigger value="feed" className="data-[state=active]:text-rose-blush dark:data-[state=active]:text-moonlit-lavender data-[state=active]:bg-rose-blush/10 dark:data-[state=active]:bg-moonlit-lavender/10 rounded-full transition-all duration-300">
+          <TabsList className="w-full justify-center bg-card/70 backdrop-blur-2xl border-b border-border/30 dark:border-border/20 rounded-none sticky top-0 z-40 shadow-lg shadow-rose-blush/5 dark:shadow-moonlit-violet/5 transition-colors duration-500">
+            <TabsTrigger 
+              value="feed" 
+              className="data-[state=active]:text-rose-blush dark:data-[state=active]:text-moonlit-lavender data-[state=active]:bg-rose-blush/10 dark:data-[state=active]:bg-moonlit-lavender/10 rounded-full transition-all duration-300 focus:ring-2 focus:ring-rose-blush/30 dark:focus:ring-moonlit-lavender/30 focus:ring-offset-2 focus:ring-offset-card"
+            >
               Feed
             </TabsTrigger>
-            <TabsTrigger value="market" className="data-[state=active]:text-rose-blush dark:data-[state=active]:text-moonlit-lavender data-[state=active]:bg-rose-blush/10 dark:data-[state=active]:bg-moonlit-lavender/10 rounded-full transition-all duration-300">
+            <TabsTrigger 
+              value="market" 
+              className="data-[state=active]:text-rose-blush dark:data-[state=active]:text-moonlit-lavender data-[state=active]:bg-rose-blush/10 dark:data-[state=active]:bg-moonlit-lavender/10 rounded-full transition-all duration-300 focus:ring-2 focus:ring-rose-blush/30 dark:focus:ring-moonlit-lavender/30 focus:ring-offset-2 focus:ring-offset-card"
+            >
               Market
             </TabsTrigger>
-            <TabsTrigger value="vault" className="data-[state=active]:text-rose-blush dark:data-[state=active]:text-moonlit-lavender data-[state=active]:bg-rose-blush/10 dark:data-[state=active]:bg-moonlit-lavender/10 rounded-full transition-all duration-300">
+            <TabsTrigger 
+              value="vault" 
+              className="data-[state=active]:text-rose-blush dark:data-[state=active]:text-moonlit-lavender data-[state=active]:bg-rose-blush/10 dark:data-[state=active]:bg-moonlit-lavender/10 rounded-full transition-all duration-300 focus:ring-2 focus:ring-rose-blush/30 dark:focus:ring-moonlit-lavender/30 focus:ring-offset-2 focus:ring-offset-card"
+            >
               Vault
             </TabsTrigger>
             <div className="ml-auto flex items-center gap-2 pr-2">
@@ -211,17 +226,39 @@ function App() {
 
 function SoundToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
   return (
-    <button
+    <motion.button
       onClick={onToggle}
-      className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-card/80 backdrop-blur-xl border border-border/50 hover:border-rose-blush/50 flex items-center justify-center transition-all duration-300 hover:shadow-lg hover:shadow-rose-blush/20 hover:scale-105"
+      className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-card/70 backdrop-blur-2xl border border-border/40 hover:border-rose-blush/50 dark:hover:border-moonlit-lavender/50 flex items-center justify-center transition-all duration-300 hover:shadow-lg hover:shadow-rose-blush/20 dark:hover:shadow-moonlit-lavender/20 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-rose-blush/50 dark:focus:ring-moonlit-lavender/50 focus:ring-offset-2 focus:ring-offset-background"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       aria-label={enabled ? 'Mute sounds' : 'Enable sounds'}
+      aria-pressed={enabled}
     >
-      {enabled ? (
-        <Volume2 className="w-5 h-5 text-rose-blush" />
-      ) : (
+      <motion.div
+        initial={false}
+        animate={{
+          scale: enabled ? 1 : 0,
+          opacity: enabled ? 1 : 0,
+          rotate: enabled ? 0 : -180,
+        }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute"
+      >
+        <Volume2 className="w-5 h-5 text-rose-blush dark:text-moonlit-lavender" />
+      </motion.div>
+      <motion.div
+        initial={false}
+        animate={{
+          scale: !enabled ? 1 : 0,
+          opacity: !enabled ? 1 : 0,
+          rotate: !enabled ? 0 : 180,
+        }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute"
+      >
         <VolumeX className="w-5 h-5 text-muted-foreground" />
-      )}
-    </button>
+      </motion.div>
+    </motion.button>
   )
 }
 

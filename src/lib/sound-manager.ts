@@ -1,22 +1,51 @@
 class SoundManager {
   private sounds: Map<string, HTMLAudioElement>
   private enabled: boolean = true
+  private currentTheme: 'light' | 'dark' = 'light'
 
   constructor() {
     this.sounds = new Map()
     this.initSounds()
   }
 
+  setTheme(theme: 'light' | 'dark') {
+    this.currentTheme = theme
+    this.initSounds()
+  }
+
   private initSounds() {
+    const isLight = this.currentTheme === 'light'
+    
     const soundEffects = {
-      glassTap: this.createBeep(800, 0.1, 'sine'),
-      heavyThud: this.createBeep(120, 0.3, 'triangle'),
-      stamp: this.createBeep(200, 0.2, 'square'),
-      unlock: this.createSequence([
-        { freq: 400, duration: 0.1 },
-        { freq: 600, duration: 0.1 },
-        { freq: 800, duration: 0.2 }
-      ])
+      glassTap: this.createBeep(isLight ? 950 : 650, 0.12, 'sine'),
+      heavyThud: this.createBeep(isLight ? 140 : 95, 0.3, 'triangle'),
+      stamp: this.createBeep(isLight ? 240 : 180, 0.2, 'square'),
+      unlock: this.createSequence(
+        isLight 
+          ? [
+              { freq: 450, duration: 0.1 },
+              { freq: 650, duration: 0.1 },
+              { freq: 900, duration: 0.2 }
+            ]
+          : [
+              { freq: 300, duration: 0.12 },
+              { freq: 450, duration: 0.12 },
+              { freq: 600, duration: 0.22 }
+            ]
+      ),
+      cardFlip: this.createSequence(
+        isLight
+          ? [
+              { freq: 800, duration: 0.08 },
+              { freq: 600, duration: 0.08 }
+            ]
+          : [
+              { freq: 500, duration: 0.09 },
+              { freq: 400, duration: 0.09 }
+            ]
+      ),
+      shimmer: this.createBeep(isLight ? 1200 : 800, 0.15, 'triangle'),
+      softClick: this.createBeep(isLight ? 700 : 500, 0.08, 'sine'),
     }
 
     Object.entries(soundEffects).forEach(([name, audio]) => {

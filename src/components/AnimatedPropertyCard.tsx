@@ -26,7 +26,7 @@ export function AnimatedPropertyCard({ children, index, className = '' }: Animat
           ease: [0.16, 1, 0.3, 1],
         },
       }}
-      className={className}
+      className={`${className} rounded-2xl overflow-hidden bg-card/70 backdrop-blur-2xl border border-border/30 dark:border-border/20 shadow-xl shadow-rose-blush/5 dark:shadow-moonlit-violet/10 hover:shadow-2xl hover:shadow-rose-blush/10 dark:hover:shadow-moonlit-lavender/20 transition-shadow duration-300`}
     >
       {children}
     </motion.div>
