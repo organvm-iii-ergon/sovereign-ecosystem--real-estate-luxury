@@ -4,6 +4,8 @@ import { motion } from 'framer-motion'
 import { Card } from './ui/card'
 import { PortfolioValueTracker } from './PortfolioValueTracker'
 import { MarketVolatilityControls } from './MarketVolatilityControls'
+import { HistoricalReplay } from './HistoricalReplay'
+import { VolatilityPatternAnalyzer } from './VolatilityPatternAnalyzer'
 import { Property } from '@/lib/types'
 
 interface MarketOverviewProps {
@@ -185,7 +187,10 @@ export function MarketOverview({ properties = [] }: MarketOverviewProps) {
         </div>
       </Card>
 
+      <VolatilityPatternAnalyzer />
+
       <MarketVolatilityControls />
+      <HistoricalReplay />
     </div>
   )
 }

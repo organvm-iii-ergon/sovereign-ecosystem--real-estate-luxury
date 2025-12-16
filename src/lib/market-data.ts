@@ -27,6 +27,13 @@ export interface MarketConfig {
   isPaused: boolean
 }
 
+export interface MarketSnapshot {
+  timestamp: number
+  marketData: Map<string, MarketData>
+  tickers: MarketTicker[]
+  config: MarketConfig
+}
+
 class MarketDataService {
   private marketData: Map<string, MarketData> = new Map()
   private subscribers: Map<string, Set<(data: MarketData) => void>> = new Map()
@@ -38,6 +45,8 @@ class MarketDataService {
   private volatility = 0.02
   private updateFrequencyMultiplier = 1
   private configSubscribers: Set<(config: MarketConfig) => void> = new Set()
+  private historicalSnapshots: MarketSnapshot[] = []
+  private maxSnapshotAge = 60 * 60 * 1000
 
   initialize(properties: Property[]) {
     properties.forEach(property => {
@@ -243,6 +252,46 @@ class MarketDataService {
     this.tickerSubscribers.clear()
     this.configSubscribers.clear()
     this.marketData.clear()
+    this.historicalSnapshots = []
+  }
+
+  takeSnapshot(): MarketSnapshot {
+    const snapshot: MarketSnapshot = {
+      timestamp: Date.now(),
+      marketData: new Map(this.marketData),
+      tickers: this.marketTickers.map(t => ({ ...t })),
+      config: this.getConfig()
+    }
+    
+    this.historicalSnapshots.push(snapshot)
+    
+    const cutoff = Date.now() - this.maxSnapshotAge
+    this.historicalSnapshots = this.historicalSnapshots.filter(
+      s => s.timestamp > cutoff
+    )
+    
+    return snapshot
+  }
+
+  getHistoricalSnapshots(duration?: number): MarketSnapshot[] {
+    if (!duration) return this.historicalSnapshots
+    
+    const cutoff = Date.now() - duration
+    return this.historicalSnapshots.filter(s => s.timestamp > cutoff)
+  }
+
+  clearHistory() {
+    this.historicalSnapshots = []
+  }
+
+  restoreSnapshot(snapshot: MarketSnapshot) {
+    this.marketData = new Map(snapshot.marketData)
+    this.marketTickers = snapshot.tickers.map(t => ({ ...t }))
+    
+    this.marketData.forEach((data, propertyId) => {
+      this.notifySubscribers(propertyId, data)
+    })
+    this.notifyTickerSubscribers()
   }
 }
 

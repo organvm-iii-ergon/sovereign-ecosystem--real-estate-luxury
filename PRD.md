@@ -13,11 +13,11 @@ This platform requires dual user flows (agent/client), sophisticated compliance 
 ## Essential Features
 
 **Live Market Data Feeds**
-- Functionality: Real-time price tracking with simulated market movements, trend indicators, sparkline charts, and market index tickers showing property values updating dynamically with adjustable volatility and update frequency controls
-- Purpose: Provides agents and clients with dynamic market intelligence to make informed investment decisions and track portfolio performance, with ability to control simulation parameters for testing and demonstration
-- Trigger: Automatically initializes when properties load, runs continuously in background
-- Progression: Properties load → Market data service initializes → Price updates begin streaming → Live price displays animate changes → Sparkline charts update → Market tickers scroll across dashboard → Trend indicators show up/down/stable movements → Users can access floating control panel to adjust volatility (0.1%-10%), update speed (0.3s-30s), and pause/resume market simulation
-- Success criteria: Prices update smoothly without jank, animations feel premium and intentional, trend indicators accurately reflect price movements, market sentiment calculations are correct, no performance degradation with multiple properties, volatility controls respond instantly, update frequency changes apply without interruption
+- Functionality: Real-time price tracking with simulated market movements, trend indicators, sparkline charts, and market index tickers showing property values updating dynamically with adjustable volatility and update frequency controls. **NEW: Historical Market Replay** allows recording and playback of past market activity with interactive timeline visualization, multiple time ranges (1min-1hour), playback speed controls (0.5x-5x), and pattern detection to identify surge, crash, oscillation, steady, and recovery patterns with confidence scores.
+- Purpose: Provides agents and clients with dynamic market intelligence to make informed investment decisions and track portfolio performance, with ability to control simulation parameters for testing and demonstration. **Historical replay enables analysis of past volatility patterns** to understand market behavior, test strategies against historical data, and identify recurring market patterns for predictive insights.
+- Trigger: Automatically initializes when properties load, runs continuously in background. Historical replay accessed via floating History button (bottom-left) which records snapshots automatically.
+- Progression: Properties load → Market data service initializes → Price updates begin streaming → **Snapshots recorded automatically** → Live price displays animate changes → Sparkline charts update → Market tickers scroll across dashboard → Trend indicators show up/down/stable movements → Users can access floating control panel to adjust volatility (0.1%-10%), update speed (0.3s-30s), and pause/resume market simulation → **Users open Historical Replay panel** → D3.js chart displays all market tickers over time as color-coded lines → Click any point on timeline to jump to that moment → Use playback controls (play/pause/skip) to replay historical data → Adjust playback speed → Select different time ranges to analyze → **Pattern Analyzer identifies volatility patterns** in real-time with confidence scores and descriptions → Pattern history shows all detected patterns with timestamps
+- Success criteria: Prices update smoothly without jank, animations feel premium and intentional, trend indicators accurately reflect price movements, market sentiment calculations are correct, no performance degradation with multiple properties, volatility controls respond instantly, update frequency changes apply without interruption. **Historical replay:** Chart renders smoothly with up to 1000+ data points, playback controls respond instantly, timeline scrubbing is smooth, snapshots are retained for selected time range, pattern detection identifies changes within 5-10 seconds with >70% confidence, pattern history updates in real-time without duplicates
 
 **Agent Dashboard (Portfolio Shield)**
 - Functionality: Blind database architecture that separates client PII (local) from asset data (cloud) with automated compliance checking
@@ -74,6 +74,10 @@ This platform requires dual user flows (agent/client), sophisticated compliance 
 - **Stale Preferences**: Prompt user to review preferences after 30 days or when match scores consistently low
 - **Multiple High-Priority Insights**: Prioritize by urgency (high > medium > low), then by insight type (alerts > opportunities > recommendations > advice)
 - **Market Simulation Extreme Values**: Constrain volatility slider to prevent unrealistic market swings, cap update frequency to prevent performance issues, persist control settings between sessions
+- **Historical Replay Empty State**: Show "Waiting for market data..." message when no snapshots recorded yet, begin recording automatically
+- **Historical Replay Memory Management**: Automatically prune snapshots older than selected time range to prevent memory issues, limit to 1000 snapshots maximum
+- **Pattern Detection Insufficient Data**: Wait for at least 10 data points before attempting pattern detection, show "Collecting data..." message
+- **Replay at End of Timeline**: Automatically stop playback when reaching last snapshot, reset button returns to live mode
 
 ## Design Direction
 
@@ -151,6 +155,11 @@ Animations should feel physics-based and luxurious, with easing curves that mimi
   - Zap (volatility indicator)
   - Activity (market activity)
   - Play/Pause (market simulation control)
+  - History (historical replay access)
+  - SkipBack/SkipForward (replay navigation)
+  - RotateCcw (reset to live mode)
+  - Calendar (time range selection)
+  - AlertCircle (pattern analysis)
 - **Spacing**: 
   - Container padding: px-6 (mobile), px-12 (desktop)
   - Card gaps: gap-4 (tight grids), gap-8 (property cards)
