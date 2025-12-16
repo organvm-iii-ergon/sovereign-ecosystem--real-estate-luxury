@@ -76,3 +76,34 @@ export interface ConciergeContext {
   conversationHistory: ConversationMessage[]
   lastInteraction: Date
 }
+
+export interface PriceAlert {
+  id: string
+  minPrice: number
+  maxPrice: number
+  bedrooms?: number
+  bathrooms?: number
+  location?: string
+  enabled: boolean
+  createdAt: string
+  lastNotified?: string
+  matchedProperties?: string[]
+}
+
+export interface MeasurementPreset {
+  id: string
+  name: string
+  description?: string
+  defaultLength?: number
+  icon?: string
+  createdAt: string
+}
+
+export interface ComparisonHistory {
+  id: string
+  propertyIds: string[]
+  snapshotUrl?: string
+  createdAt: string
+  title: string
+  shareableLink?: string
+}

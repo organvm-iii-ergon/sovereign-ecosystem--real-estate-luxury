@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Property } from '@/lib/types'
+import { useKV } from '@github/spark/hooks'
+import { Property, ComparisonHistory } from '@/lib/types'
 import { 
   X, GitCompare, TrendingUp, TrendingDown, Home, DollarSign, Calendar, 
   Maximize2, Droplet, Zap, AlertCircle, CheckCircle, Sparkles, ChevronRight,
   Award, Target, AlertTriangle, Lightbulb, ArrowUpRight, ArrowDownRight,
-  Minus
+  Minus, Save
 } from 'lucide-react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
@@ -15,6 +16,7 @@ import { ScrollArea } from './ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { soundManager } from '@/lib/sound-manager'
 import { toast } from 'sonner'
+import { saveComparisonToHistory } from './ComparisonHistoryViewer'
 
 interface PropertyComparisonProps {
   properties: Property[]
@@ -110,8 +112,20 @@ export function PropertyComparison({ properties, selectedIds, onClose, onRemoveP
   const [aiInsights, setAiInsights] = useState<AIInsight[]>([])
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false)
   const [activeView, setActiveView] = useState<'grid' | 'details'>('grid')
+  const [comparisonHistory, setComparisonHistory] = useKV<ComparisonHistory[]>('comparison-history', [])
 
   const selectedProperties = properties.filter(p => selectedIds.includes(p.id))
+
+  const saveToHistory = () => {
+    const title = `${selectedProperties.map(p => p.title).join(' vs ')}`
+    const comparison = saveComparisonToHistory(selectedIds, title)
+    
+    setComparisonHistory(current => [comparison, ...(current || [])])
+    soundManager.play('success')
+    toast.success('Comparison saved to history', {
+      description: 'Access it anytime from the History panel'
+    })
+  }
 
   useEffect(() => {
     if (selectedProperties.length >= 2) {
@@ -264,6 +278,15 @@ Be specific, use data points, and maintain a sophisticated tone appropriate for 
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={saveToHistory}
+                className="gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Save to History
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

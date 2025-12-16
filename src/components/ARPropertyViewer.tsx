@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useKV } from '@github/spark/hooks'
-import { Property, Document } from '@/lib/types'
+import { Property, Document, MeasurementPreset } from '@/lib/types'
 import { 
   X, Camera, RotateCcw, Maximize2, Minimize2, Info, Eye, EyeOff,
   Home, DollarSign, Ruler, MapPin, Sparkles, ZoomIn, ZoomOut, Save, Download,
@@ -15,6 +15,7 @@ import { Input } from './ui/input'
 import { ScrollArea } from './ui/scroll-area'
 import { soundManager } from '@/lib/sound-manager'
 import { toast } from 'sonner'
+import { MeasurementPresets } from './MeasurementPresets'
 
 interface MeasurementPoint {
   x: number
@@ -59,6 +60,7 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
   const [scaleFactor, setScaleFactor] = useState(1)
   const [editingLabel, setEditingLabel] = useState<string | null>(null)
   const [labelInput, setLabelInput] = useState('')
+  const [activePreset, setActivePreset] = useState<MeasurementPreset | null>(null)
   
   const lastTouchDistance = useRef<number>(0)
   const lastTouchAngle = useRef<number>(0)
@@ -391,6 +393,7 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
   const clearMeasurements = () => {
     setMeasurements([])
     setCurrentMeasurement(null)
+    setActivePreset(null)
     soundManager.play('glassTap')
     toast.success('All measurements cleared')
   }
@@ -547,6 +550,21 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
     setRotation(0)
     setPosition({ x: 0, y: 0 })
     soundManager.play('glassTap')
+  }
+
+  const handlePresetSelect = (preset: MeasurementPreset) => {
+    setActivePreset(preset)
+    setMeasurementMode(true)
+    setShowOverlay(false)
+    
+    if (preset.defaultLength) {
+      setScaleFactor(preset.defaultLength / 10)
+    }
+    
+    soundManager.play('success')
+    toast.success(`Using "${preset.name}" preset`, {
+      description: preset.description || 'Tap two points to measure'
+    })
   }
 
   const toggleFullscreen = () => {
@@ -708,6 +726,7 @@ export function ARPropertyViewer({ property, onClose }: ARPropertyViewerProps) {
             </AnimatePresence>
 
             <div className="flex gap-2">
+              <MeasurementPresets onSelectPreset={handlePresetSelect} />
               <Button
                 variant={measurementMode ? 'default' : 'secondary'}
                 size="icon"

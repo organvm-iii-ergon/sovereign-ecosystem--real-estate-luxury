@@ -5,6 +5,8 @@ import { FlippablePropertyCard } from './FlippablePropertyCard'
 import { ARPropertyViewer } from './ARPropertyViewer'
 import { PropertyComparisonSlider } from './PropertyComparisonSlider'
 import { PropertySelector } from './PropertySelector'
+import { PriceAlerts } from './PriceAlerts'
+import { ComparisonHistoryViewer } from './ComparisonHistoryViewer'
 import { Button } from './ui/button'
 import { Camera, ArrowLeftRight } from 'lucide-react'
 import { soundManager } from '@/lib/sound-manager'
@@ -62,17 +64,31 @@ export function ClientFeed({ properties, onBack }: ClientFeedProps) {
     setShowComparisonSelector(false)
   }
 
+  const handleRevisitComparison = (propertyIds: string[]) => {
+    const selectedProperties = properties.filter(p => propertyIds.includes(p.id))
+    if (selectedProperties.length >= 2) {
+      setComparisonPair([selectedProperties[0], selectedProperties[1]])
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pearl-white via-background to-lavender-mist/20 dark:from-midnight-blue dark:via-background dark:to-moonlit-indigo/30 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 z-50 p-6 flex items-center justify-between bg-gradient-to-b from-card/70 via-card/40 to-transparent backdrop-blur-2xl border-b border-border/20">
         <h1 className="text-2xl font-light text-foreground tracking-wide">Sovereign</h1>
-        <button
-          onClick={onBack}
-          className="text-muted-foreground hover:text-rose-blush dark:hover:text-moonlit-lavender transition-colors text-sm font-light focus:outline-none focus:ring-2 focus:ring-rose-blush/50 dark:focus:ring-moonlit-lavender/50 rounded-lg px-3 py-2"
-          aria-label="Exit to main menu"
-        >
-          Exit
-        </button>
+        <div className="flex items-center gap-3">
+          <PriceAlerts properties={properties} />
+          <ComparisonHistoryViewer 
+            properties={properties} 
+            onRevisit={handleRevisitComparison}
+          />
+          <button
+            onClick={onBack}
+            className="text-muted-foreground hover:text-rose-blush dark:hover:text-moonlit-lavender transition-colors text-sm font-light focus:outline-none focus:ring-2 focus:ring-rose-blush/50 dark:focus:ring-moonlit-lavender/50 rounded-lg px-3 py-2"
+            aria-label="Exit to main menu"
+          >
+            Exit
+          </button>
+        </div>
       </header>
 
       <div className="h-screen flex items-center justify-center p-4">
