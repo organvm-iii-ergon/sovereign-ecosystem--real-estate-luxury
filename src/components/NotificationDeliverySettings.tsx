@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Mail, MessageSquare, Send, CheckCircle, XCircle, Clock, Trash2, MessageCircle, Send as SendIcon } from 'lucide-react'
+import { Mail, MessageSquare, Send, CheckCircle, XCircle, Clock, Trash2, MessageCircle, Send as SendIcon, Globe } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -10,7 +10,9 @@ import { Card } from './ui/card'
 import { Badge } from './ui/badge'
 import { Separator } from './ui/separator'
 import { ScrollArea } from './ui/scroll-area'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { notificationDeliveryService, NotificationPreferences, DeliveryLog, AlertPriority } from '@/lib/notification-delivery'
+import { SupportedLanguage, getSupportedLanguages, getLanguageName } from '@/lib/translations'
 import { toast } from 'sonner'
 
 interface NotificationDeliverySettingsProps {
@@ -275,6 +277,26 @@ export function NotificationDeliverySettings({ open, onOpenChange }: Notificatio
     toast.success('Telegram username saved')
   }
 
+  const handleWhatsAppLanguageChange = (language: SupportedLanguage) => {
+    notificationDeliveryService.updatePreferences({
+      whatsapp: {
+        ...preferences.whatsapp,
+        language
+      }
+    })
+    toast.success(`WhatsApp language set to ${getLanguageName(language)}`)
+  }
+
+  const handleTelegramLanguageChange = (language: SupportedLanguage) => {
+    notificationDeliveryService.updatePreferences({
+      telegram: {
+        ...preferences.telegram,
+        language
+      }
+    })
+    toast.success(`Telegram language set to ${getLanguageName(language)}`)
+  }
+
   const handleClearLogs = () => {
     notificationDeliveryService.clearDeliveryLogs()
     toast.success('Delivery logs cleared')
@@ -528,6 +550,31 @@ export function NotificationDeliverySettings({ open, onOpenChange }: Notificatio
                 )}
               </div>
 
+              <div>
+                <Label htmlFor="whatsapp-language" className="text-sm text-slate-grey mb-2 flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  Message Language
+                </Label>
+                <Select
+                  value={preferences.whatsapp.language}
+                  onValueChange={(value) => handleWhatsAppLanguageChange(value as SupportedLanguage)}
+                >
+                  <SelectTrigger id="whatsapp-language">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getSupportedLanguages().map((lang) => (
+                      <SelectItem key={lang} value={lang}>
+                        {getLanguageName(lang)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-grey mt-1">
+                  Alert messages will be translated to this language
+                </p>
+              </div>
+
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-sm text-foreground">Enable WhatsApp Alerts</Label>
@@ -603,6 +650,31 @@ export function NotificationDeliverySettings({ open, onOpenChange }: Notificatio
                 {telegramError && (
                   <p className="text-xs text-red-400 mt-1">{telegramError}</p>
                 )}
+              </div>
+
+              <div>
+                <Label htmlFor="telegram-language" className="text-sm text-slate-grey mb-2 flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  Message Language
+                </Label>
+                <Select
+                  value={preferences.telegram.language}
+                  onValueChange={(value) => handleTelegramLanguageChange(value as SupportedLanguage)}
+                >
+                  <SelectTrigger id="telegram-language">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getSupportedLanguages().map((lang) => (
+                      <SelectItem key={lang} value={lang}>
+                        {getLanguageName(lang)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-grey mt-1">
+                  Alert messages will be translated to this language
+                </p>
               </div>
 
               <div className="flex items-center justify-between">
@@ -747,13 +819,19 @@ export function NotificationDeliverySettings({ open, onOpenChange }: Notificatio
               <li className="flex gap-2">
                 <span className="text-champagne-gold">•</span>
                 <span>
-                  WhatsApp messages include rich formatting with emojis and detailed metrics
+                  WhatsApp messages include rich formatting with emojis and detailed metrics in your selected language
                 </span>
               </li>
               <li className="flex gap-2">
                 <span className="text-champagne-gold">•</span>
                 <span>
-                  Telegram messages support HTML formatting and provide full alert context
+                  Telegram messages support HTML formatting and provide full alert context in your selected language
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="text-champagne-gold">•</span>
+                <span>
+                  Multi-language support available for WhatsApp and Telegram: English, Spanish, French, German, Italian, Portuguese, Chinese, Japanese, Arabic, and Russian
                 </span>
               </li>
               <li className="flex gap-2">

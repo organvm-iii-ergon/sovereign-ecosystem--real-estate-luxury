@@ -1,4 +1,5 @@
 import { PatternAlert, AlertPriority } from './pattern-alerts'
+import { SupportedLanguage, getTranslations } from './translations'
 
 export type { AlertPriority }
 
@@ -19,11 +20,13 @@ export interface NotificationPreferences {
     enabled: boolean
     phoneNumber: string
     priorities: AlertPriority[]
+    language: SupportedLanguage
   }
   telegram: {
     enabled: boolean
     username: string
     priorities: AlertPriority[]
+    language: SupportedLanguage
   }
 }
 
@@ -52,12 +55,14 @@ class NotificationDeliveryService {
     whatsapp: {
       enabled: false,
       phoneNumber: '',
-      priorities: ['critical', 'high']
+      priorities: ['critical', 'high'],
+      language: 'en'
     },
     telegram: {
       enabled: false,
       username: '',
-      priorities: ['critical', 'high']
+      priorities: ['critical', 'high'],
+      language: 'en'
     }
   }
 
@@ -288,6 +293,8 @@ This is an automated alert from The Sovereign Ecosystem.
   }
 
   private formatWhatsAppBody(alert: PatternAlert): string {
+    const lang = this.preferences.whatsapp.language
+    const t = getTranslations(lang)
     const emoji = this.getPriorityEmoji(alert.priority)
     const change = alert.metrics?.priceChange 
       ? ` ${alert.metrics.priceChange >= 0 ? '📈' : '📉'} ${alert.metrics.priceChange >= 0 ? '+' : ''}${alert.metrics.priceChange.toFixed(2)}%`
@@ -297,17 +304,19 @@ This is an automated alert from The Sovereign Ecosystem.
 
 ${alert.message}
 
-📊 Pattern: ${alert.pattern.toUpperCase()}
-🎯 Confidence: ${alert.confidence.toFixed(0)}%
-${alert.metrics?.volatility ? `⚡ Volatility: ${alert.metrics.volatility.toFixed(2)}` : ''}
-${alert.metrics?.volume ? `📦 Volume: ${alert.metrics.volume}` : ''}
+📊 ${t.pattern}: ${alert.pattern.toUpperCase()}
+🎯 ${t.confidence}: ${alert.confidence.toFixed(0)}%
+${alert.metrics?.volatility ? `⚡ ${t.volatility}: ${alert.metrics.volatility.toFixed(2)}` : ''}
+${alert.metrics?.volume ? `📦 ${t.volume}: ${alert.metrics.volume}` : ''}
 
-🕐 ${new Date(alert.timestamp).toLocaleTimeString()}
+🕐 ${new Date(alert.timestamp).toLocaleTimeString(this.getLocale(lang))}
 
-_The Sovereign Ecosystem - Market Alert_`
+_The Sovereign Ecosystem - ${t.marketAlert}_`
   }
 
   private formatTelegramBody(alert: PatternAlert): string {
+    const lang = this.preferences.telegram.language
+    const t = getTranslations(lang)
     const emoji = this.getPriorityEmoji(alert.priority)
     const change = alert.metrics?.priceChange 
       ? ` ${alert.metrics.priceChange >= 0 ? '📈' : '📉'} ${alert.metrics.priceChange >= 0 ? '+' : ''}${alert.metrics.priceChange.toFixed(2)}%`
@@ -317,15 +326,31 @@ _The Sovereign Ecosystem - Market Alert_`
 
 ${alert.message}
 
-<b>Pattern Details:</b>
-• Pattern: <code>${alert.pattern.toUpperCase()}</code>
-• Confidence: <code>${alert.confidence.toFixed(0)}%</code>
-${alert.metrics?.volatility ? `• Volatility: <code>${alert.metrics.volatility.toFixed(2)}</code>` : ''}
-${alert.metrics?.volume ? `• Volume: <code>${alert.metrics.volume}</code>` : ''}
+<b>${t.patternDetails}:</b>
+• ${t.pattern}: <code>${alert.pattern.toUpperCase()}</code>
+• ${t.confidence}: <code>${alert.confidence.toFixed(0)}%</code>
+${alert.metrics?.volatility ? `• ${t.volatility}: <code>${alert.metrics.volatility.toFixed(2)}</code>` : ''}
+${alert.metrics?.volume ? `• ${t.volume}: <code>${alert.metrics.volume}</code>` : ''}
 
-🕐 ${new Date(alert.timestamp).toLocaleString()}
+🕐 ${new Date(alert.timestamp).toLocaleString(this.getLocale(lang))}
 
-<i>The Sovereign Ecosystem - Market Alert</i>`
+<i>The Sovereign Ecosystem - ${t.marketAlert}</i>`
+  }
+
+  private getLocale(language: SupportedLanguage): string {
+    const localeMap: Record<SupportedLanguage, string> = {
+      en: 'en-US',
+      es: 'es-ES',
+      fr: 'fr-FR',
+      de: 'de-DE',
+      it: 'it-IT',
+      pt: 'pt-BR',
+      zh: 'zh-CN',
+      ja: 'ja-JP',
+      ar: 'ar-SA',
+      ru: 'ru-RU'
+    }
+    return localeMap[language] || 'en-US'
   }
 
   private getPriorityEmoji(priority: AlertPriority): string {
