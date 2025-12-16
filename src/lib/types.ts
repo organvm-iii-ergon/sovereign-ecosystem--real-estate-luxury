@@ -56,3 +56,23 @@ export interface User {
   inviteCode?: string
   authenticated: boolean
 }
+
+export interface ConversationMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+  properties?: Property[]
+  metadata?: {
+    intent?: string
+    confidence?: number
+    suggestedActions?: string[]
+  }
+}
+
+export interface ConciergeContext {
+  recentProperties: Property[]
+  userPreferences: any
+  conversationHistory: ConversationMessage[]
+  lastInteraction: Date
+}
