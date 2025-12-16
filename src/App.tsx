@@ -105,7 +105,7 @@ function App() {
           </TabsContent>
         </Tabs>
 
-        <AIConcierge />
+        <AIConcierge properties={analyzedProperties} userPortfolio={analyzedProperties} />
       </div>
       <SoundToggle enabled={soundEnabled} onToggle={toggleSound} />
       <Toaster theme="dark" position="top-center" />

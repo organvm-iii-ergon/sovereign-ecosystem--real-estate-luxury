@@ -34,11 +34,11 @@ This platform requires dual user flows (agent/client), sophisticated compliance 
 - Success criteria: Calculations are accurate, slider responds smoothly to drag, visual feedback is immediate
 
 **AI Concierge**
-- Functionality: Floating chat interface with proactive property recommendations
-- Purpose: Simulates personal concierge service with contextual, off-market opportunities
-- Trigger: Floating action button in bottom right
-- Progression: Client taps button → 3D avatar appears with chat interface → Displays proactive message about matched property → Client can engage or dismiss
-- Success criteria: Interface feels conversational, recommendations appear contextually relevant
+- Functionality: Intelligent recommendation engine with floating chat interface that provides real-time, personalized property suggestions based on user preferences, portfolio analysis, and market conditions
+- Purpose: Delivers proactive insights including property matches, lease expiration alerts, refinancing opportunities, and portfolio diversification advice
+- Trigger: Floating action button in bottom right (shows notification badge when new insights available)
+- Progression: Client taps button → Concierge panel slides up → Displays categorized insights (recommendations, alerts, opportunities, advice) sorted by urgency → Each insight shows property details, match score, reasons, and action buttons → Client can customize preferences via settings icon → Insights refresh in real-time as properties and preferences change
+- Success criteria: Recommendations are contextually relevant with high match scores (80+), urgency levels are accurate, preference customization affects future recommendations, interface feels conversational and helpful
 
 **Private Vault (Document Management)**
 - Functionality: Secure document storage with time-limited sharing and privacy controls
@@ -63,6 +63,9 @@ This platform requires dual user flows (agent/client), sophisticated compliance 
 - **Offline State**: Cache last viewed properties, display "Limited Connectivity" banner, queue actions for sync when reconnected
 - **No Properties in Watchlist**: Show empty state with illustration and call-to-action to add properties
 - **Document Upload Failures**: Retry automatically with exponential backoff, show progress indicator, allow manual retry
+- **No Matching Recommendations**: Display empty state in AI Concierge suggesting preference adjustments, show general market insights
+- **Stale Preferences**: Prompt user to review preferences after 30 days or when match scores consistently low
+- **Multiple High-Priority Insights**: Prioritize by urgency (high > medium > low), then by insight type (alerts > opportunities > recommendations > advice)
 
 ## Design Direction
 
