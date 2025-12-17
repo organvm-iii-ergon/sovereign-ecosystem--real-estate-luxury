@@ -3,7 +3,7 @@ import { Property } from '@/lib/types'
 import { Card } from './ui/card'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
-import { AlertTriangle, Calendar, Shield, TrendingUp, Camera, ArrowLeftRight, BookOpen } from 'lucide-react'
+import { AlertTriangle, Calendar, Shield, TrendingUp, Camera, ArrowLeftRight, BookOpen, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AnimatedPropertyCard } from './AnimatedPropertyCard'
 import { MarketTicker } from './MarketTicker'
@@ -17,6 +17,7 @@ import { PropertyComparisonSelector, PropertyCardWithSelection } from './Propert
 import { ARPropertyViewer } from './ARPropertyViewer'
 import { PropertyComparisonSlider } from './PropertyComparisonSlider'
 import { FeatureDemoGuide } from './FeatureDemoGuide'
+import { TestingDashboard } from './TestingDashboard'
 import { soundManager } from '@/lib/sound-manager'
 
 interface AgentDashboardProps {
@@ -62,6 +63,7 @@ export function AgentDashboard({ properties, watchlistProperties, riskProperties
             <p className="text-muted-foreground text-sm font-light tracking-wide">Compliance Intelligence Dashboard</p>
           </div>
           <div className="flex items-center gap-4">
+            <TestingDashboard />
             <Button
               variant="outline"
               size="sm"
