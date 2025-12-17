@@ -37,11 +37,18 @@ interface TestingModule {
 }
 
 interface TestSession {
+  id: string
   startTime: string
   endTime?: string
   completedModules: string[]
   audioEnabled: boolean
   notes: string[]
+  totalTests: number
+  passedTests: number
+  failedTests: number
+  duration: number
+  userName?: string
+  userAvatar?: string
 }
 
 export function TestingDashboard() {
@@ -49,11 +56,18 @@ export function TestingDashboard() {
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [currentModule, setCurrentModule] = useState<string | null>(null)
   const [testSession, setTestSession] = useKV<TestSession>('current-test-session', {
+    id: `session-${Date.now()}`,
     startTime: new Date().toISOString(),
     completedModules: [],
     audioEnabled: true,
-    notes: []
+    notes: [],
+    totalTests: 0,
+    passedTests: 0,
+    failedTests: 0,
+    duration: 0,
+    userName: 'Test User'
   })
+  const [testSessions, setTestSessions] = useKV<TestSession[]>('test-sessions-history', [])
 
   useEffect(() => {
     if (audioEnabled && !soundManager.isEnabled()) {
@@ -120,20 +134,43 @@ export function TestingDashboard() {
   const handleModuleComplete = (moduleId: string) => {
     setTestSession(prev => {
       const current = prev || {
+        id: `session-${Date.now()}`,
         startTime: new Date().toISOString(),
         completedModules: [],
         audioEnabled: true,
-        notes: []
+        notes: [],
+        totalTests: 0,
+        passedTests: 0,
+        failedTests: 0,
+        duration: 0,
+        userName: 'Test User'
       }
       const newCompletedModules = [...(current.completedModules || []), moduleId].filter((v, i, a) => a.indexOf(v) === i)
       
       const isAllComplete = newCompletedModules.length === modules.length
+      const now = new Date().toISOString()
+      const endTime = isAllComplete ? now : current.endTime
+      const duration = isAllComplete 
+        ? new Date(now).getTime() - new Date(current.startTime).getTime()
+        : current.duration
       
-      return {
+      const updatedSession = {
         ...current,
         completedModules: newCompletedModules,
-        endTime: isAllComplete ? new Date().toISOString() : current.endTime
+        endTime,
+        duration,
+        totalTests: current.totalTests + 1,
+        passedTests: current.passedTests + 1
       }
+      
+      if (isAllComplete && endTime) {
+        setTestSessions(prevSessions => {
+          const sessions = prevSessions || []
+          return [...sessions, updatedSession]
+        })
+      }
+      
+      return updatedSession
     })
     soundManager.play('success')
     toast.success('Module completed!', {
@@ -153,12 +190,19 @@ export function TestingDashboard() {
   }
 
   const handleStartSession = () => {
-    setTestSession({
+    const newSession = {
+      id: `session-${Date.now()}`,
       startTime: new Date().toISOString(),
       completedModules: [],
       audioEnabled: audioEnabled,
-      notes: []
-    })
+      notes: [],
+      totalTests: 0,
+      passedTests: 0,
+      failedTests: 0,
+      duration: 0,
+      userName: 'Test User'
+    }
+    setTestSession(newSession)
     soundManager.play('glassTap')
     toast.success('New test session started', {
       description: 'Begin testing features systematically'
@@ -170,10 +214,16 @@ export function TestingDashboard() {
     setAudioEnabled(newState)
     setTestSession(prev => {
       const current = prev || {
+        id: `session-${Date.now()}`,
         startTime: new Date().toISOString(),
         completedModules: [],
         audioEnabled: true,
-        notes: []
+        notes: [],
+        totalTests: 0,
+        passedTests: 0,
+        failedTests: 0,
+        duration: 0,
+        userName: 'Test User'
       }
       return {
         ...current,
