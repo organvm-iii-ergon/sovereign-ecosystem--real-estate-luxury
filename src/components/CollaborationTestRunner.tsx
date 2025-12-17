@@ -19,6 +19,9 @@ import { collaborationService } from '@/lib/collaboration-service'
 import { offlineSyncService } from '@/lib/offline-sync-service'
 import { Property, Measurement, ContractorProfile, MeasurementCollection } from '@/lib/types'
 import { TestFailureNotifications, TestFailure } from './TestFailureNotifications'
+import { TestEmailNotifications } from './TestEmailNotifications'
+import { TestLeaderboard } from './TestLeaderboard'
+import { TestSessionComparison } from './TestSessionComparison'
 
 interface TestCase {
   id: string
@@ -59,6 +62,7 @@ export function CollaborationTestRunner() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [testFailures, setTestFailures] = useState<TestFailure[]>([])
   const [retryAttempts, setRetryAttempts] = useState<Map<string, number>>(new Map())
+  const [testSessions, setTestSessions] = useKV<any[]>('test-sessions-history', [])
 
   const testCases: TestCase[] = [
     {
@@ -472,6 +476,20 @@ export function CollaborationTestRunner() {
     setIsRunning(false)
     setCurrentTestIndex(filteredTests.length)
 
+    const session = {
+      id: `session-${Date.now()}`,
+      startTime: new Date(Date.now() - totalDuration).toISOString(),
+      endTime: new Date().toISOString(),
+      completedModules: filteredTests.map(t => t.id),
+      totalTests: results.size,
+      passedTests: passed,
+      failedTests: failed,
+      duration: totalDuration,
+      userName: 'Test User'
+    }
+    
+    setTestSessions(prev => [session, ...(prev || [])].slice(0, 50))
+
     if (failed === 0) {
       toast.success('All tests passed!', { 
         description: `${passed} tests completed in ${(totalDuration / 1000).toFixed(2)}s` 
@@ -598,49 +616,55 @@ ${report.results.map(r => `${r.result.success ? '✓' : '✗'} ${r.testName}`).j
 
           <TabsContent value="tests" className="flex-1 overflow-hidden flex flex-col space-y-4 m-0 mt-4">
             <Card className="p-4 bg-muted/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Button
-                    onClick={runTests}
-                    disabled={isRunning}
-                    className="bg-gradient-to-r from-rose-blush to-rose-gold dark:from-moonlit-violet dark:to-moonlit-lavender"
-                  >
-                    {isRunning ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-                    {isRunning ? 'Running...' : 'Run Tests'}
-                  </Button>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={runTests}
+                      disabled={isRunning}
+                      className="bg-gradient-to-r from-rose-blush to-rose-gold dark:from-moonlit-violet dark:to-moonlit-lavender"
+                    >
+                      {isRunning ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                      {isRunning ? 'Running...' : 'Run Tests'}
+                    </Button>
 
-                  <div className="flex gap-2">
-                    {['all', 'collaboration', 'offline', 'sync'].map(category => (
-                      <Button
-                        key={category}
-                        variant={selectedCategory === category ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setSelectedCategory(category)}
-                        disabled={isRunning}
-                      >
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                        {category !== 'all' && (
-                          <Badge variant="secondary" className="ml-2">
-                            {testCases.filter(t => t.category === category).length}
-                          </Badge>
-                        )}
-                      </Button>
-                    ))}
+                    <TestEmailNotifications failures={testFailures} />
+                    <TestLeaderboard />
+                    <TestSessionComparison />
                   </div>
+
+                  {testResults.size > 0 && (
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <span className="text-sm font-medium">{stats.passed}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <XCircle className="w-5 h-5 text-red-500" />
+                        <span className="text-sm font-medium">{stats.failed}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {testResults.size > 0 && (
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                      <span className="text-sm font-medium">{stats.passed}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <XCircle className="w-5 h-5 text-red-500" />
-                      <span className="text-sm font-medium">{stats.failed}</span>
-                    </div>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  {['all', 'collaboration', 'offline', 'sync'].map(category => (
+                    <Button
+                      key={category}
+                      variant={selectedCategory === category ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedCategory(category)}
+                      disabled={isRunning}
+                    >
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                      {category !== 'all' && (
+                        <Badge variant="secondary" className="ml-2">
+                          {testCases.filter(t => t.category === category).length}
+                        </Badge>
+                      )}
+                    </Button>
+                  ))}
+                </div>
               </div>
 
               {isRunning && (

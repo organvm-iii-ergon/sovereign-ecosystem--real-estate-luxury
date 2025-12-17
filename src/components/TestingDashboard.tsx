@@ -18,6 +18,8 @@ import { VoiceGuidedARTutorial } from './VoiceGuidedARTutorial'
 import { CollaborationTestRunner } from './CollaborationTestRunner'
 import { ARTutorialVideo } from './ARTutorialVideo'
 import { TestCompletionCertificate } from './TestCompletionCertificate'
+import { TestLeaderboard } from './TestLeaderboard'
+import { TestSessionComparison } from './TestSessionComparison'
 import { soundManager } from '@/lib/sound-manager'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
@@ -292,6 +294,9 @@ export function TestingDashboard() {
                 <Sparkles className="w-4 h-4" />
                 New Session
               </Button>
+
+              <TestLeaderboard />
+              <TestSessionComparison />
             </div>
           </div>
         </DialogHeader>
