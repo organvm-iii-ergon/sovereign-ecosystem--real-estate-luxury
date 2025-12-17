@@ -8,8 +8,11 @@ import { PropertySelector } from './PropertySelector'
 import { PriceAlerts } from './PriceAlerts'
 import { ComparisonHistoryViewer } from './ComparisonHistoryViewer'
 import { FeatureDemoGuide } from './FeatureDemoGuide'
+import { ARTutorialVideo } from './ARTutorialVideo'
+import { VoiceGuidedARTutorial } from './VoiceGuidedARTutorial'
+import { CollaborationTestRunner } from './CollaborationTestRunner'
 import { Button } from './ui/button'
-import { Camera, ArrowLeftRight, BookOpen } from 'lucide-react'
+import { Camera, ArrowLeftRight, BookOpen, GraduationCap } from 'lucide-react'
 import { soundManager } from '@/lib/sound-manager'
 
 interface ClientFeedProps {
@@ -76,8 +79,17 @@ export function ClientFeed({ properties, onBack }: ClientFeedProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pearl-white via-background to-lavender-mist/20 dark:from-midnight-blue dark:via-background dark:to-moonlit-indigo/30 overflow-hidden">
       <header className="absolute top-0 left-0 right-0 z-50 p-6 flex items-center justify-between bg-gradient-to-b from-card/70 via-card/40 to-transparent backdrop-blur-2xl border-b border-border/20">
-        <h1 className="text-2xl font-light text-foreground tracking-wide">Sovereign</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-light text-foreground tracking-wide">Sovereign</h1>
+          <div className="hidden lg:flex items-center gap-2 bg-muted/30 rounded-full px-4 py-2">
+            <GraduationCap className="w-4 h-4 text-rose-blush dark:text-moonlit-lavender" />
+            <span className="text-sm text-muted-foreground">Tutorials Available</span>
+          </div>
+        </div>
         <div className="flex items-center gap-3">
+          <VoiceGuidedARTutorial />
+          <ARTutorialVideo />
+          <CollaborationTestRunner />
           <Button
             variant="ghost"
             size="sm"
