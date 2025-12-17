@@ -13,6 +13,7 @@ import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Checkbox } from './ui/checkbox'
 import { Separator } from './ui/separator'
+import { ChartExportDialog } from './ChartExportDialog'
 import { useKV } from '@github/spark/hooks'
 import { soundManager } from '@/lib/sound-manager'
 import { toast } from 'sonner'
@@ -668,11 +669,17 @@ function PerformanceTrendsChart({ members, timeRange }: { members: TeamMember[],
   return (
     <ScrollArea className="flex-1 pr-4">
       <div className="space-y-6">
-        <Card className="p-6 bg-gradient-to-br from-card to-card/50">
-          <h3 className="text-lg font-serif font-semibold mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-rose-blush dark:text-moonlit-lavender" />
-            Performance Trends Over Time
-          </h3>
+        <Card className="p-6 bg-gradient-to-br from-card to-card/50" id="team-performance-trends">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-serif font-semibold flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-rose-blush dark:text-moonlit-lavender" />
+              Performance Trends Over Time
+            </h3>
+            <ChartExportDialog
+              chartId="team-performance-trends"
+              chartTitle="Team Performance Trends"
+            />
+          </div>
           <div className="space-y-6">
             {members.map((member, idx) => {
               const sortedSessions = [...member.sessions].sort((a, b) => 

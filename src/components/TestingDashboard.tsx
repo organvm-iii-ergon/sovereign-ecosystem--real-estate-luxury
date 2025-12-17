@@ -23,6 +23,9 @@ import { TestSessionComparison } from './TestSessionComparison'
 import { TeamLeaderboard } from './TeamLeaderboard'
 import { TestDataExport } from './TestDataExport'
 import { AutomatedTestSchedule } from './AutomatedTestSchedule'
+import { ChartExportDialog } from './ChartExportDialog'
+import { EmailScheduler } from './EmailScheduler'
+import { TeamComparisonView } from './TeamComparisonView'
 import { soundManager } from '@/lib/sound-manager'
 import { toast } from 'sonner'
 import { useKV } from '@github/spark/hooks'
@@ -354,9 +357,11 @@ export function TestingDashboard() {
 
               <TestLeaderboard />
               <TeamLeaderboard />
+              <TeamComparisonView />
               <TestSessionComparison />
               <TestDataExport />
               <AutomatedTestSchedule />
+              <EmailScheduler />
             </div>
           </div>
         </DialogHeader>
