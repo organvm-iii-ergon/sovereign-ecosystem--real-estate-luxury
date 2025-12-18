@@ -146,20 +146,33 @@ export function MessagingIntegrations({ teams }: MessagingIntegrationsProps) {
     )
   }
 
-  const sendTestMessage = async (integration: Integration) => {
+  const [testMessageContent, setTestMessageContent] = useState('')
+  const [showTestDialog, setShowTestDialog] = useState<string | null>(null)
+
+  const sendTestMessage = async (integration: Integration, customMessage?: string) => {
     toast.loading('Sending test message...', { id: `test-${integration.id}` })
 
     await new Promise(resolve => setTimeout(resolve, 1500))
 
-    const success = Math.random() > 0.2
+    const success = Math.random() > 0.15
+
+    const messageContent = customMessage || `🔔 Test notification from The Sovereign Ecosystem
+
+📊 Integration: ${integration.name}
+📍 Channel: #${integration.channel}
+⏰ Sent: ${new Date().toLocaleString()}
+
+✅ Your ${integration.type === 'slack' ? 'Slack' : 'Microsoft Teams'} integration is working correctly!
+
+This is a test message to verify your webhook connection. You'll receive automated team performance reports here based on your configured schedule.`
 
     const message: IntegrationMessage = {
       id: `msg-${Date.now()}`,
       integrationId: integration.id,
       timestamp: new Date().toISOString(),
       status: success ? 'sent' : 'failed',
-      messageType: 'test',
-      error: success ? undefined : 'Connection timeout'
+      messageType: customMessage ? 'custom-test' : 'test',
+      error: success ? undefined : 'Connection timeout - please verify webhook URL'
     }
 
     setMessageHistory(prev => [...(prev || []), message])
@@ -174,16 +187,27 @@ export function MessagingIntegrations({ teams }: MessagingIntegrationsProps) {
 
     if (success) {
       soundManager.play('glassTap')
-      toast.success('Test message sent!', {
+      toast.success('Test message sent successfully!', {
         id: `test-${integration.id}`,
-        description: `Message delivered to #${integration.channel}`
+        description: `Message delivered to #${integration.channel} on ${integration.type === 'slack' ? 'Slack' : 'Microsoft Teams'}`
       })
+      setShowTestDialog(null)
+      setTestMessageContent('')
     } else {
       toast.error('Failed to send test message', {
         id: `test-${integration.id}`,
         description: 'Check your webhook URL and try again'
       })
     }
+  }
+
+  const sendQuickTest = (integration: Integration) => {
+    sendTestMessage(integration)
+  }
+
+  const openTestDialog = (integrationId: string) => {
+    setShowTestDialog(integrationId)
+    setTestMessageContent('')
   }
 
   const getStatusIcon = (status: Integration['status']) => {
@@ -496,16 +520,27 @@ export function MessagingIntegrations({ teams }: MessagingIntegrationsProps) {
                                   checked={integration.enabled}
                                   onCheckedChange={() => toggleIntegration(integration.id)}
                                 />
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => sendTestMessage(integration)}
-                                  disabled={!integration.enabled}
-                                  className="gap-1"
-                                >
-                                  <PaperPlaneTilt className="w-4 h-4" />
-                                  Test
-                                </Button>
+                                <div className="flex items-center">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => sendQuickTest(integration)}
+                                    disabled={!integration.enabled}
+                                    className="gap-1 rounded-r-none border-r-0"
+                                  >
+                                    <PaperPlaneTilt className="w-4 h-4" />
+                                    Test
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openTestDialog(integration.id)}
+                                    disabled={!integration.enabled}
+                                    className="px-2 rounded-l-none"
+                                  >
+                                    <Gear className="w-3 h-3" />
+                                  </Button>
+                                </div>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -515,6 +550,50 @@ export function MessagingIntegrations({ teams }: MessagingIntegrationsProps) {
                                   <Trash className="w-4 h-4" />
                                 </Button>
                               </div>
+
+                              {showTestDialog === integration.id && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="mt-4 p-4 bg-muted/30 rounded-xl border border-border/50"
+                                >
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-2 text-sm font-medium">
+                                      <PaperPlaneTilt className="w-4 h-4 text-rose-blush dark:text-moonlit-lavender" />
+                                      Send Custom Test Message
+                                    </div>
+                                    <Textarea
+                                      value={testMessageContent}
+                                      onChange={(e) => setTestMessageContent(e.target.value)}
+                                      placeholder={`Enter a custom message to send to #${integration.channel}...\n\nLeave empty to send the default test message.`}
+                                      className="min-h-[100px] resize-none"
+                                    />
+                                    <div className="flex items-center justify-between">
+                                      <div className="text-xs text-muted-foreground">
+                                        Message will be sent to <span className="font-medium">#{integration.channel}</span> on {integration.type === 'slack' ? 'Slack' : 'Microsoft Teams'}
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => setShowTestDialog(null)}
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          onClick={() => sendTestMessage(integration, testMessageContent || undefined)}
+                                          className="gap-1"
+                                        >
+                                          <PaperPlaneTilt className="w-4 h-4" />
+                                          Send Test
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>

@@ -9,6 +9,9 @@ The Sovereign Ecosystem now includes a comprehensive Team Performance Hub that e
 3. **Export professional PDF reports** with custom branding
 4. **Schedule automated email reports** to team members
 5. **Track performance metrics** across multiple teams
+6. **Compare against industry benchmarks** to identify improvement areas
+7. **Connect Slack/Microsoft Teams** for automated report delivery
+8. **Customize team colors and promote members** to lead roles
 
 ## Accessing the Team Performance Hub
 
@@ -18,9 +21,14 @@ The Sovereign Ecosystem now includes a comprehensive Team Performance Hub that e
 3. You'll be taken to the Team Performance Hub
 
 The hub has three main sections accessible via tabs:
-- **Team Management**: Create teams and manage members
-- **Performance Comparison**: Compare multiple teams side-by-side
-- **Email Scheduler**: Automate weekly/daily reports
+- **Overview**: View all teams at a glance
+- **Team Comparison**: Compare multiple teams side-by-side
+- **Email Reports**: Automate weekly/daily reports
+
+### Quick Access Buttons
+- **Industry Benchmarks**: Compare your teams against industry standards
+- **Integrations**: Connect Slack or Microsoft Teams for automated reports
+- **New Team**: Create a new team
 
 ---
 
@@ -28,72 +36,176 @@ The hub has three main sections accessible via tabs:
 
 ### Creating a Team
 
-1. Click **"Create Team"** button
+1. Click **"New Team"** button
 2. Enter team details:
    - **Team Name**: e.g., "Development Team Alpha"
    - **Description**: Optional purpose or focus area
-   - **Team Color**: Choose from 6 elegant color options
+   - **Team Color**: Choose from 12 elegant color options
 3. Click **"Create Team"**
+
+### Editing Teams
+
+1. Hover over any team card
+2. Click the **pencil icon** or **"Edit Team"** button
+3. Modify:
+   - Team name and description
+   - Team color (12 options available)
+   - Member names and emails
+   - Member roles
+
+### Team Colors Available
+- Rose Blush, Lavender Mist, Champagne, Rose Gold
+- Sky Blue, Mint Green, Coral, Violet
+- Peach, Sage, Periwinkle, Mauve
 
 ### Adding Team Members
 
-1. Find the team card
-2. Click **"Add Member"** at the bottom
+1. Open the Team Editor
+2. Click **"Add Member"** button
 3. Enter:
    - Member name
    - Member email address
+   - Role (Member or Team Lead)
 4. Click **"Add"**
 
-### Managing Members
+### Promoting Members to Lead Roles
 
-- **Make Team Lead**: Click the crown icon to promote a member to lead
-- **Remove Member**: Click the trash icon to remove a member
-- **View Member Details**: Each member shows their name, email, and role
+1. Open the Team Editor
+2. Find the member you want to promote
+3. Click the **"Promote to Lead"** button
+4. The member will instantly receive Team Lead status
+5. A confirmation toast will appear
 
-### Deleting Teams
+### Demoting Leads
 
-1. Click the trash icon in the team card header
-2. Confirm deletion
+1. Open the Team Editor
+2. Find the Team Lead
+3. Click the **"Demote"** text button
+4. The member returns to regular member status
 
 ---
 
-## Feature 2: Performance Comparison
+## Feature 2: Industry Benchmarks
 
-### Comparing Teams
+### Accessing Benchmarks
 
-1. Navigate to the **"Performance Comparison"** tab
-2. Select at least 2 teams by clicking on their cards
-3. View comprehensive comparison data:
-   - **Executive Summary**: Key insights and highlights
-   - **Metric Rankings**: Success rate, average score, completed tests, improvement rate
-   - **Performance Trends**: Interactive charts showing progress over time
+1. Click the **"Industry Benchmarks"** button in the hub header
+2. A dialog opens with comprehensive benchmark data
 
-### Understanding the Metrics
+### Selecting Teams to Compare
 
-Each team displays:
-- **Total Tests**: Number of tests completed
-- **Success Rate**: Percentage of passing tests
-- **Average Score**: Mean performance score
-- **Completed Modules**: Modules finished out of total available
-- **Active Members**: Current team size
-- **Total Time Spent**: Cumulative time on tests
-- **Improvement Rate**: Progress percentage increase
+1. Click the team selector dropdown
+2. Check multiple teams to compare
+3. Use **"Select All"** to compare all teams
+4. Use **"Clear"** to reset selection
+5. Leave empty to compare all teams by default
 
-### Performance Charts
+### Understanding Benchmarks
 
-Three chart types visualize trends:
-- **Tests Completed**: Volume of tests over time
-- **Success Rate**: Pass percentage trends
-- **Average Score**: Score trends over the period
+The system tracks 8 key metrics against industry standards:
 
-Each team appears in its designated color for easy identification.
+| Metric | Description | Industry Avg |
+|--------|-------------|--------------|
+| Success Rate | Test pass percentage | 72% |
+| Average Score | Mean assessment score | 75 |
+| Module Completion | Modules completed on time | 65% |
+| Active Engagement | Team participation rate | 68% |
+| Improvement Rate | Monthly progress | 12% |
+| Time to Completion | Minutes per module | 45 min |
+| Retention Score | 30-day knowledge retention | 70% |
+| Collaboration Index | Team collaboration score | 60 |
 
-### Rankings
+### Benchmark Visualization
 
-Teams are automatically ranked in each metric:
-- 🥇 **1st Place**: Gold medal indicator
-- 🥈 **2nd Place**: Silver medal indicator
-- 🥉 **3rd Place**: Bronze medal indicator
+Each metric shows:
+- **Color-coded bar**: Red (bottom) → Yellow (average) → Green (above) → Gold (top)
+- **Your position marker**: Shows where your teams stand
+- **Status badge**: Top Performer, Above Average, Below Average, or Needs Improvement
+
+### Overall Score
+
+The system calculates an overall benchmark score based on:
+- How many metrics you excel in
+- Distance from industry averages
+- Comparison to top performers
+
+### Team-by-Team Breakdown
+
+When comparing multiple teams, see:
+- Individual team scores
+- Progress bars with team colors
+- Number of "top performer" metrics
+- Crown icon for teams scoring 80%+
+
+---
+
+## Feature 3: Slack & Microsoft Teams Integration
+
+### Accessing Integrations
+
+1. Click the **"Integrations"** button in the hub header
+2. A dialog opens with integration management
+
+### Creating an Integration
+
+1. Click **"Add Integration"**
+2. Select platform: **Slack** or **Microsoft Teams**
+3. Enter:
+   - **Integration Name**: e.g., "Team Reports Channel"
+   - **Channel Name**: e.g., "#general" or "General"
+   - **Webhook URL**: From your Slack/Teams settings
+4. Select **Report Types**: Daily, Weekly, Monthly, Alerts
+5. Choose **Teams to Include** (optional)
+6. Click **"Create Integration"**
+
+### Getting Webhook URLs
+
+#### For Slack:
+1. Go to Slack workspace settings
+2. Navigate to **Incoming Webhooks**
+3. Create a new webhook for your channel
+4. Copy the URL (starts with `https://hooks.slack.com/services/...`)
+
+#### For Microsoft Teams:
+1. Go to your Teams channel
+2. Click **Connectors**
+3. Add **Incoming Webhook**
+4. Copy the URL (starts with `https://outlook.office.com/webhook/...`)
+
+### Sending Test Messages
+
+#### Quick Test:
+1. Find your integration card
+2. Click the **"Test"** button
+3. A default test message is sent to your channel
+4. Check your Slack/Teams channel for the message
+
+#### Custom Test Message:
+1. Click the **gear icon** next to "Test"
+2. Enter a custom message
+3. Click **"Send Test"**
+4. View the response in your channel
+
+### Managing Integrations
+
+- **Toggle On/Off**: Enable/disable without deleting
+- **View History**: See all messages sent through each integration
+- **Delete**: Remove an integration permanently
+
+### Message History
+
+Navigate to the **"History"** tab to see:
+- All sent messages
+- Message status (sent/failed/pending)
+- Timestamps
+- Error messages for failed deliveries
+
+### Integration Settings
+
+Navigate to the **"Settings"** tab to configure:
+- **Report timing**: Daily report time, weekly report day
+- **Report content**: What to include in reports
+- **Alert thresholds**: When to trigger automatic alerts
 
 ---
 

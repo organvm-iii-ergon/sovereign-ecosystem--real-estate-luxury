@@ -21,7 +21,8 @@ import {
   X, 
   Trash,
   Plus,
-  Check
+  Check,
+  ArrowUp
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { soundManager } from '@/lib/sound-manager'
@@ -34,7 +35,11 @@ const TEAM_COLORS = [
   { name: 'Sky Blue', value: '#A7C7E7', light: 'rgba(167, 199, 231, 0.15)' },
   { name: 'Mint Green', value: '#98D8C8', light: 'rgba(152, 216, 200, 0.15)' },
   { name: 'Coral', value: '#FF8B8B', light: 'rgba(255, 139, 139, 0.15)' },
-  { name: 'Violet', value: '#9B7EDE', light: 'rgba(155, 126, 222, 0.15)' }
+  { name: 'Violet', value: '#9B7EDE', light: 'rgba(155, 126, 222, 0.15)' },
+  { name: 'Peach', value: '#FFB4A2', light: 'rgba(255, 180, 162, 0.15)' },
+  { name: 'Sage', value: '#B5C99A', light: 'rgba(181, 201, 154, 0.15)' },
+  { name: 'Periwinkle', value: '#C3B1E1', light: 'rgba(195, 177, 225, 0.15)' },
+  { name: 'Mauve', value: '#D4A5A5', light: 'rgba(212, 165, 165, 0.15)' }
 ]
 
 interface TeamEditorProps {
@@ -364,34 +369,42 @@ export function TeamEditor({ team, onClose, trigger }: TeamEditorProps) {
 
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <Label className="text-xs text-muted-foreground">Role:</Label>
-                                <Select 
-                                  value={member.role} 
-                                  onValueChange={(v) => updateMemberRole(member.id, v as 'lead' | 'member')}
-                                >
-                                  <SelectTrigger className="w-36 h-8">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="member">
-                                      <span className="flex items-center gap-2">
-                                        <UserCircle className="w-4 h-4" />
-                                        Member
-                                      </span>
-                                    </SelectItem>
-                                    <SelectItem value="lead">
-                                      <span className="flex items-center gap-2">
-                                        <Crown className="w-4 h-4 text-amber-500" weight="fill" />
-                                        Team Lead
-                                      </span>
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                {member.role === 'lead' && (
-                                  <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30">
-                                    <Crown className="w-3 h-3 mr-1" weight="fill" />
-                                    Lead
-                                  </Badge>
+                                {member.role === 'member' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      updateMemberRole(member.id, 'lead')
+                                      soundManager.play('glassTap')
+                                      toast.success(`${member.name} promoted to Team Lead!`, {
+                                        description: 'They now have lead privileges'
+                                      })
+                                    }}
+                                    className="gap-2 hover:bg-amber-500/10 hover:border-amber-500/50 hover:text-amber-600 transition-all"
+                                  >
+                                    <Crown className="w-4 h-4" />
+                                    Promote to Lead
+                                  </Button>
+                                ) : (
+                                  <div className="flex items-center gap-2">
+                                    <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 border-amber-500/30 px-3 py-1">
+                                      <Crown className="w-4 h-4 mr-1.5" weight="fill" />
+                                      Team Lead
+                                    </Badge>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        updateMemberRole(member.id, 'member')
+                                        soundManager.play('glassTap')
+                                        toast.info(`${member.name} is now a regular member`)
+                                      }}
+                                      className="text-xs text-muted-foreground hover:text-foreground h-7"
+                                    >
+                                      <UserCircle className="w-3 h-3 mr-1" />
+                                      Demote
+                                    </Button>
+                                  </div>
                                 )}
                               </div>
 

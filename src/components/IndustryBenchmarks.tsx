@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useKV } from '@github/spark/hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
@@ -9,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import { ScrollArea } from './ui/scroll-area'
 import { Separator } from './ui/separator'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
+import { Checkbox } from './ui/checkbox'
 import { Team, teamPerformanceService } from '@/lib/team-performance-service'
 import {
   ChartBar,
@@ -24,9 +28,15 @@ import {
   Info,
   Medal,
   Crown,
-  Sparkle
+  Sparkle,
+  Plus,
+  CaretDown,
+  Check,
+  X,
+  Scales
 } from '@phosphor-icons/react'
 import { soundManager } from '@/lib/sound-manager'
+import { toast } from 'sonner'
 
 interface IndustryBenchmark {
   metric: string
@@ -119,8 +129,9 @@ interface IndustryBenchmarksProps {
 
 export function IndustryBenchmarks({ teams }: IndustryBenchmarksProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [selectedTeam, setSelectedTeam] = useState<string>('all')
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [showTeamSelector, setShowTeamSelector] = useState(false)
 
   const teamPerformances = useMemo(() => {
     return teams.map(team => ({
@@ -129,27 +140,65 @@ export function IndustryBenchmarks({ teams }: IndustryBenchmarksProps) {
     }))
   }, [teams])
 
-  const aggregatedMetrics = useMemo(() => {
-    if (teamPerformances.length === 0) return null
+  const teamsToCompare = useMemo(() => {
+    if (selectedTeams.length === 0) return teamPerformances
+    return teamPerformances.filter(tp => selectedTeams.includes(tp.team.id))
+  }, [teamPerformances, selectedTeams])
 
-    const performances = selectedTeam === 'all' 
-      ? teamPerformances 
-      : teamPerformances.filter(tp => tp.team.id === selectedTeam)
+  const toggleTeamSelection = (teamId: string) => {
+    setSelectedTeams(prev => {
+      if (prev.includes(teamId)) {
+        return prev.filter(id => id !== teamId)
+      }
+      return [...prev, teamId]
+    })
+    soundManager.play('glassTap')
+  }
+
+  const selectAllTeams = () => {
+    setSelectedTeams(teams.map(t => t.id))
+    soundManager.play('glassTap')
+  }
+
+  const clearTeamSelection = () => {
+    setSelectedTeams([])
+    soundManager.play('glassTap')
+  }
+
+  const getTeamMetrics = (teamId: string) => {
+    const tp = teamPerformances.find(t => t.team.id === teamId)
+    if (!tp) return null
+
+    const perf = tp.performance
+    return {
+      'Success Rate': perf.metrics.successRate,
+      'Average Score': perf.metrics.averageScore,
+      'Module Completion': Math.round((perf.metrics.completedModules / perf.metrics.totalModules) * 100),
+      'Active Engagement': Math.min(perf.metrics.activeMembers * 10, 100),
+      'Improvement Rate': perf.metrics.improvementRate,
+      'Time to Completion': 35 + Math.random() * 20,
+      'Retention Score': 65 + Math.random() * 20,
+      'Collaboration Index': 55 + Math.random() * 25
+    }
+  }
+
+  const aggregatedMetrics = useMemo(() => {
+    if (teamsToCompare.length === 0) return null
 
     const avgSuccessRate = Math.round(
-      performances.reduce((sum, tp) => sum + tp.performance.metrics.successRate, 0) / performances.length
+      teamsToCompare.reduce((sum, tp) => sum + tp.performance.metrics.successRate, 0) / teamsToCompare.length
     )
     const avgScore = Math.round(
-      performances.reduce((sum, tp) => sum + tp.performance.metrics.averageScore, 0) / performances.length
+      teamsToCompare.reduce((sum, tp) => sum + tp.performance.metrics.averageScore, 0) / teamsToCompare.length
     )
     const avgModuleCompletion = Math.round(
-      performances.reduce((sum, tp) => sum + (tp.performance.metrics.completedModules / tp.performance.metrics.totalModules * 100), 0) / performances.length
+      teamsToCompare.reduce((sum, tp) => sum + (tp.performance.metrics.completedModules / tp.performance.metrics.totalModules * 100), 0) / teamsToCompare.length
     )
     const avgEngagement = Math.round(
-      performances.reduce((sum, tp) => sum + tp.performance.metrics.activeMembers * 10, 0) / performances.length
+      teamsToCompare.reduce((sum, tp) => sum + tp.performance.metrics.activeMembers * 10, 0) / teamsToCompare.length
     )
     const avgImprovement = Math.round(
-      performances.reduce((sum, tp) => sum + tp.performance.metrics.improvementRate, 0) / performances.length
+      teamsToCompare.reduce((sum, tp) => sum + tp.performance.metrics.improvementRate, 0) / teamsToCompare.length
     )
 
     return {
@@ -162,7 +211,7 @@ export function IndustryBenchmarks({ teams }: IndustryBenchmarksProps) {
       'Retention Score': 65 + Math.random() * 20,
       'Collaboration Index': 55 + Math.random() * 25
     }
-  }, [teamPerformances, selectedTeam])
+  }, [teamsToCompare])
 
   const filteredBenchmarks = useMemo(() => {
     if (selectedCategory === 'all') return INDUSTRY_BENCHMARKS
@@ -280,27 +329,102 @@ export function IndustryBenchmarks({ teams }: IndustryBenchmarksProps) {
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-4 py-4">
-              <div className="flex items-center gap-2">
-                <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select Team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Teams</SelectItem>
-                    {teams.map(team => (
-                      <SelectItem key={team.id} value={team.id}>
-                        <span className="flex items-center gap-2">
-                          <span 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: team.color }}
-                          />
-                          {team.name}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="flex items-center gap-4 py-4 flex-wrap">
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTeamSelector(!showTeamSelector)}
+                  className="gap-2 min-w-[200px] justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <Scales className="w-4 h-4" />
+                    {selectedTeams.length === 0 
+                      ? 'All Teams' 
+                      : selectedTeams.length === 1
+                        ? teams.find(t => t.id === selectedTeams[0])?.name
+                        : `${selectedTeams.length} Teams Selected`
+                    }
+                  </div>
+                  <CaretDown className={`w-4 h-4 transition-transform ${showTeamSelector ? 'rotate-180' : ''}`} />
+                </Button>
+
+                <AnimatePresence>
+                  {showTeamSelector && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full left-0 mt-2 w-72 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+                    >
+                      <div className="p-3 border-b border-border bg-muted/30">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Select Teams to Compare</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowTeamSelector(false)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={selectAllTeams}
+                            className="text-xs h-7"
+                          >
+                            Select All
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={clearTeamSelection}
+                            className="text-xs h-7"
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      </div>
+                      <ScrollArea className="max-h-[200px]">
+                        <div className="p-2 space-y-1">
+                          {teams.map(team => (
+                            <button
+                              key={team.id}
+                              onClick={() => toggleTeamSelection(team.id)}
+                              className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                                selectedTeams.includes(team.id) || selectedTeams.length === 0
+                                  ? 'bg-rose-blush/10 dark:bg-moonlit-lavender/10'
+                                  : 'hover:bg-muted/50'
+                              }`}
+                            >
+                              <div
+                                className="w-4 h-4 rounded border-2 flex items-center justify-center"
+                                style={{
+                                  borderColor: team.color,
+                                  backgroundColor: selectedTeams.includes(team.id) || selectedTeams.length === 0 ? team.color : 'transparent'
+                                }}
+                              >
+                                {(selectedTeams.includes(team.id) || selectedTeams.length === 0) && (
+                                  <Check className="w-3 h-3 text-white" weight="bold" />
+                                )}
+                              </div>
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: team.color }}
+                              />
+                              <span className="text-sm flex-1 text-left">{team.name}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {team.members.length} members
+                              </Badge>
+                            </button>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -317,6 +441,12 @@ export function IndustryBenchmarks({ teams }: IndustryBenchmarksProps) {
               </Select>
 
               <div className="ml-auto flex items-center gap-3">
+                {teamsToCompare.length > 1 && (
+                  <Badge variant="outline" className="gap-1 text-sm py-1.5">
+                    <Users className="w-4 h-4" />
+                    Comparing {teamsToCompare.length} teams
+                  </Badge>
+                )}
                 <Card className="p-3 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30">
                   <div className="flex items-center gap-3">
                     <Sparkle className="w-5 h-5 text-amber-500" weight="fill" />
@@ -480,6 +610,96 @@ export function IndustryBenchmarks({ teams }: IndustryBenchmarksProps) {
                   </div>
                 </CardContent>
               </Card>
+
+              {teamsToCompare.length > 1 && (
+                <>
+                  <Separator className="my-6" />
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl font-serif flex items-center gap-2">
+                        <Scales className="w-5 h-5 text-rose-blush dark:text-moonlit-lavender" />
+                        Team-by-Team Breakdown
+                      </CardTitle>
+                      <CardDescription>
+                        Individual team scores compared to industry benchmarks
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {teamsToCompare.map((tp, teamIdx) => {
+                          const metrics = getTeamMetrics(tp.team.id)
+                          if (!metrics) return null
+                          
+                          let teamScore = 0
+                          let count = 0
+                          INDUSTRY_BENCHMARKS.forEach(benchmark => {
+                            const value = metrics[benchmark.metric as keyof typeof metrics]
+                            if (typeof value === 'number') {
+                              const status = getComparisonStatus(value, benchmark)
+                              if (status === 'top') teamScore += 4
+                              else if (status === 'above') teamScore += 3
+                              else if (status === 'below') teamScore += 2
+                              else teamScore += 1
+                              count++
+                            }
+                          })
+                          const score = Math.round((teamScore / (count * 4)) * 100)
+
+                          return (
+                            <motion.div
+                              key={tp.team.id}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: teamIdx * 0.1 }}
+                              className="p-4 rounded-xl border border-border/50 hover:border-rose-blush/30 dark:hover:border-moonlit-lavender/30 transition-colors"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div
+                                  className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+                                  style={{ backgroundColor: tp.team.color }}
+                                >
+                                  {tp.team.name.charAt(0)}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h4 className="font-semibold">{tp.team.name}</h4>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-2xl font-bold font-serif">{score}%</span>
+                                      {score >= 80 && (
+                                        <Crown className="w-5 h-5 text-amber-500" weight="fill" />
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${score}%` }}
+                                      transition={{ duration: 0.8, delay: teamIdx * 0.1 }}
+                                      className="h-full rounded-full"
+                                      style={{ 
+                                        background: `linear-gradient(90deg, ${tp.team.color}80, ${tp.team.color})`
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                                    <span>{tp.team.members.length} members</span>
+                                    <span>
+                                      {INDUSTRY_BENCHMARKS.filter(b => {
+                                        const v = metrics[b.metric as keyof typeof metrics]
+                                        return typeof v === 'number' && getComparisonStatus(v, b) === 'top'
+                                      }).length} top performer metrics
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </ScrollArea>
           </>
         )}
