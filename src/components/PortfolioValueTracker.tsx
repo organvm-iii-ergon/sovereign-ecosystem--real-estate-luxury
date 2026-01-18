@@ -1,4 +1,4 @@
-import { useEffect, useState, memo } from 'react'
+import { useEffect, useState, useRef, memo } from 'react'
 import { Property } from '@/lib/types'
 import { marketDataService } from '@/lib/market-data'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -14,7 +14,9 @@ const PortfolioValueTracker = memo(function PortfolioValueTracker({ properties }
   const [totalChange, setTotalChange] = useState(0)
   const [totalChangePercent, setTotalChangePercent] = useState(0)
   const [isFlashing, setIsFlashing] = useState(false)
-  const [previousValue, setPreviousValue] = useState(0)
+  // Use useRef for previousValue to avoid useEffect dependency churn
+  // This prevents unsubscription/resubscription on every price update
+  const previousValueRef = useRef(0)
 
   useEffect(() => {
     const updatePortfolioValue = () => {
@@ -32,9 +34,9 @@ const PortfolioValueTracker = memo(function PortfolioValueTracker({ properties }
         }
       })
 
-      if (totalCurrent !== previousValue) {
+      if (totalCurrent !== previousValueRef.current) {
         setIsFlashing(true)
-        setPreviousValue(totalCurrent)
+        previousValueRef.current = totalCurrent
         setTimeout(() => setIsFlashing(false), 500)
       }
 
@@ -52,7 +54,7 @@ const PortfolioValueTracker = memo(function PortfolioValueTracker({ properties }
     return () => {
       unsubscribers.forEach(unsub => unsub())
     }
-  }, [properties, previousValue])
+  }, [properties])
 
   const trend = totalChange > 0 ? 'up' : totalChange < 0 ? 'down' : 'stable'
 
