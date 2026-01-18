@@ -23,6 +23,25 @@ interface ComparisonData {
   improvementScore: number
 }
 
+// Helper to escape CSV values and prevent Formula Injection
+const escapeCSV = (value: unknown): string => {
+  if (value === null || value === undefined) return ''
+  let str = String(value)
+
+  // Prevent Formula Injection (CSV Injection)
+  // If the string starts with =, +, -, @, \t, or \r, prepend a single quote
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`
+  }
+
+  // Standard CSV escaping: escape quotes and wrap in quotes if necessary
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+
+  return str
+}
+
 export const exportSessionsToCSV = (sessions: TestSession[]): string => {
   if (!sessions || sessions.length === 0) {
     return 'No data to export'
@@ -57,15 +76,6 @@ export const exportSessionsToCSV = (sessions: TestSession[]): string => {
     } else {
       return `${seconds}s`
     }
-  }
-
-  const escapeCSV = (value: any): string => {
-    if (value === null || value === undefined) return ''
-    const str = String(value)
-    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-      return `"${str.replace(/"/g, '""')}"`
-    }
-    return str
   }
 
   const rows = sessions.map(session => {
@@ -128,15 +138,6 @@ export const exportComparisonToCSV = (comparisons: ComparisonData[]): string => 
     'Tests Run Change',
     'Improvement Score'
   ]
-
-  const escapeCSV = (value: any): string => {
-    if (value === null || value === undefined) return ''
-    const str = String(value)
-    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-      return `"${str.replace(/"/g, '""')}"`
-    }
-    return str
-  }
 
   const rows = comparisons.map(comp => {
     const successRate1 = comp.session1.totalTests > 0
@@ -209,15 +210,6 @@ export const exportLeaderboardToCSV = (
     'Total Sessions',
     'Badges'
   ]
-
-  const escapeCSV = (value: any): string => {
-    if (value === null || value === undefined) return ''
-    const str = String(value)
-    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-      return `"${str.replace(/"/g, '""')}"`
-    }
-    return str
-  }
 
   const rows = leaderboard.map(entry => {
     return [
