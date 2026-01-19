@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Toaster } from 'sonner'
 import { Property, UserRole, Document } from './lib/types'
@@ -47,9 +47,10 @@ function App() {
     }
   }, [properties])
 
-  const analyzedProperties = (properties || []).map(analyzeProperty)
-  const watchlistProperties = getWatchlistProperties(analyzedProperties)
-  const riskProperties = getRiskMapProperties(analyzedProperties)
+  // Memoize expensive analysis to prevent unnecessary re-renders of child components
+  const analyzedProperties = useMemo(() => (properties || []).map(analyzeProperty), [properties])
+  const watchlistProperties = useMemo(() => getWatchlistProperties(analyzedProperties), [analyzedProperties])
+  const riskProperties = useMemo(() => getRiskMapProperties(analyzedProperties), [analyzedProperties])
 
   const handleRoleSelect = (role: UserRole) => {
     setUserRole(role)
