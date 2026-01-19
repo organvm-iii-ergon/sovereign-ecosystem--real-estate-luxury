@@ -7,7 +7,6 @@ import {
 } from 'lucide-react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
-import { Badge } from './ui/badge'
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { soundManager } from '@/lib/sound-manager'
@@ -81,7 +80,7 @@ export function ShareableComparisonLink({
       soundManager.play('success')
       toast.success('Link copied to clipboard')
       setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
+    } catch {
       toast.error('Failed to copy link')
     }
   }
@@ -95,7 +94,7 @@ export function ShareableComparisonLink({
 
   const shareViaWhatsApp = () => {
     const text = `Check out this property comparison: ${propertyA.title} vs ${propertyB.title}\n\n${shareLink}\n\nExpires in ${expiryTime} hours`
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
     soundManager.play('glassTap')
   }
 
@@ -129,6 +128,7 @@ export function ShareableComparisonLink({
             size="icon"
             onClick={onClose}
             className="absolute top-4 right-4 bg-black/50 backdrop-blur-md hover:bg-black/70 text-white"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -208,12 +208,14 @@ export function ShareableComparisonLink({
                       value={shareLink}
                       readOnly
                       className="flex-1 bg-muted/30 font-mono text-xs"
+                      aria-label="Shareable link"
                     />
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={copyToClipboard}
                       className="flex-shrink-0"
+                      aria-label={copied ? 'Link copied' : 'Copy link'}
                     >
                       {copied ? (
                         <Check className="w-4 h-4 text-green-400" />

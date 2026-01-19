@@ -80,6 +80,7 @@ export function ClientAuth({ onAuthenticate }: ClientAuthProps) {
                 placeholder="INVITE-CODE"
                 className="text-center text-2xl tracking-widest bg-background/50 border-border/50 focus:border-rose-blush text-foreground placeholder:text-muted-foreground rounded-2xl font-light"
                 disabled={isValidating}
+                aria-label="Invite Code"
               />
               {error && (
                 <motion.p
