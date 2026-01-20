@@ -58,7 +58,7 @@ export function ParticleBackground() {
   const particlesRef = useRef<Particle[]>([])
   const constellationParticlesRef = useRef<Map<string, Particle[]>>(new Map())
   const animationFrameRef = useRef<number | undefined>(undefined)
-  const { theme, mounted } = useTheme()
+  const { theme } = useTheme()
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -118,7 +118,11 @@ export function ParticleBackground() {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      particles.forEach((particle) => {
+      // Optimize loop performance by using standard for loops instead of forEach
+      // This avoids function allocation on every frame
+      const len = particles.length
+      for (let i = 0; i < len; i++) {
+        const particle = particles[i]
         particle.x += particle.vx
         particle.y += particle.vy
 
@@ -148,16 +152,26 @@ export function ParticleBackground() {
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, particle.size * 3, 0, Math.PI * 2)
         ctx.fill()
-      })
+      }
 
-      particles.forEach((p1, i) => {
-        particles.slice(i + 1).forEach((p2) => {
+      // Optimize connection drawing:
+      // 1. Use nested for loops to avoid Array.slice() allocations
+      // 2. Use squared distance check to avoid expensive Math.sqrt calls
+      const connectionDistanceSq = 22500 // 150 * 150
+
+      for (let i = 0; i < len; i++) {
+        const p1 = particles[i]
+        for (let j = i + 1; j < len; j++) {
+          const p2 = particles[j]
           const dx = p1.x - p2.x
           const dy = p1.y - p2.y
-          const distance = Math.sqrt(dx * dx + dy * dy)
+          const distSq = dx * dx + dy * dy
 
-          if (distance < 150) {
+          if (distSq < connectionDistanceSq) {
+            // Only calculate sqrt if we are within range and need it for opacity
+            const distance = Math.sqrt(distSq)
             const opacity = (1 - distance / 150) * 0.08
+
             ctx.strokeStyle = theme === 'dark' 
               ? `rgba(180, 150, 220, ${opacity})` 
               : `rgba(224, 136, 170, ${opacity})`
@@ -167,8 +181,8 @@ export function ParticleBackground() {
             ctx.lineTo(p2.x, p2.y)
             ctx.stroke()
           }
-        })
-      })
+        }
+      }
 
       CONSTELLATIONS.forEach(constellation => {
         const constellationParticles = constellationParticlesRef.current.get(constellation.name)
