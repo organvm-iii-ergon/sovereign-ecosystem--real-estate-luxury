@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, Check } from 'lucide-react'
+import { Lock, Check, Loader2 } from 'lucide-react'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 import { soundManager } from '@/lib/sound-manager'
@@ -80,9 +80,15 @@ export function ClientAuth({ onAuthenticate }: ClientAuthProps) {
                 placeholder="INVITE-CODE"
                 className="text-center text-2xl tracking-widest bg-background/50 border-border/50 focus:border-rose-blush text-foreground placeholder:text-muted-foreground rounded-2xl font-light"
                 disabled={isValidating}
+                aria-label="Invite code"
+                aria-invalid={!!error}
+                aria-describedby={error ? "invite-error" : undefined}
               />
               {error && (
                 <motion.p
+                  id="invite-error"
+                  role="alert"
+                  aria-live="polite"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-destructive text-sm mt-2 text-center"
@@ -94,10 +100,17 @@ export function ClientAuth({ onAuthenticate }: ClientAuthProps) {
 
             <Button
               type="submit"
-              disabled={isValidating || inviteCode.length < 6}
+              disabled={isValidating}
               className="w-full bg-gradient-to-r from-rose-blush to-rose-gold text-white hover:shadow-lg hover:shadow-rose-blush/30 font-light py-6 text-lg rounded-2xl transition-all duration-300 hover:scale-[1.02]"
             >
-              {isValidating ? 'Validating...' : 'Enter'}
+              {isValidating ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Validating...</span>
+                </div>
+              ) : (
+                'Enter'
+              )}
             </Button>
           </form>
 
@@ -114,7 +127,7 @@ function BiometricScan({ onComplete }: { onComplete: () => void }) {
   const [scanning, setScanning] = useState(true)
   const [success, setSuccess] = useState(false)
 
-  useState(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setScanning(false)
       setSuccess(true)
@@ -123,7 +136,7 @@ function BiometricScan({ onComplete }: { onComplete: () => void }) {
     }, 2000)
 
     return () => clearTimeout(timer)
-  })
+  }, [onComplete])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pearl-white via-background to-lavender-mist/30 flex items-center justify-center p-6 relative overflow-hidden">
@@ -164,12 +177,14 @@ function BiometricScan({ onComplete }: { onComplete: () => void }) {
           )}
         </motion.div>
 
-        <h3 className="text-3xl font-light text-foreground mb-3 tracking-wide">
-          {scanning ? 'Authenticating...' : 'Access Granted'}
-        </h3>
-        <p className="text-muted-foreground font-light">
-          {scanning ? 'Verifying your identity' : 'Welcome to The Sovereign Ecosystem'}
-        </p>
+        <div aria-live="polite" role="status">
+          <h3 className="text-3xl font-light text-foreground mb-3 tracking-wide">
+            {scanning ? 'Authenticating...' : 'Access Granted'}
+          </h3>
+          <p className="text-muted-foreground font-light">
+            {scanning ? 'Verifying your identity' : 'Welcome to The Sovereign Ecosystem'}
+          </p>
+        </div>
       </motion.div>
     </div>
   )
