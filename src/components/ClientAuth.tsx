@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, Check } from 'lucide-react'
+import { Lock, Check, Loader2 } from 'lucide-react'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 import { soundManager } from '@/lib/sound-manager'
@@ -63,7 +63,7 @@ export function ClientAuth({ onAuthenticate }: ClientAuthProps) {
               className="inline-block mb-6"
             >
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-blush/20 to-lavender-mist/20 flex items-center justify-center backdrop-blur-sm border border-rose-blush/20">
-                <Lock className="w-12 h-12 text-rose-blush" strokeWidth={1.5} />
+                <Lock className="w-12 h-12 text-rose-blush" strokeWidth={1.5} aria-hidden="true" />
               </div>
             </motion.div>
             <h2 className="text-4xl font-light text-foreground mb-3 tracking-wide">Velvet Rope Entry</h2>
@@ -80,9 +80,14 @@ export function ClientAuth({ onAuthenticate }: ClientAuthProps) {
                 placeholder="INVITE-CODE"
                 className="text-center text-2xl tracking-widest bg-background/50 border-border/50 focus:border-rose-blush text-foreground placeholder:text-muted-foreground rounded-2xl font-light"
                 disabled={isValidating}
+                aria-label="Invite Code"
+                aria-invalid={!!error}
+                aria-describedby={error ? "auth-error" : undefined}
               />
               {error && (
                 <motion.p
+                  id="auth-error"
+                  role="alert"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-destructive text-sm mt-2 text-center"
@@ -97,7 +102,12 @@ export function ClientAuth({ onAuthenticate }: ClientAuthProps) {
               disabled={isValidating || inviteCode.length < 6}
               className="w-full bg-gradient-to-r from-rose-blush to-rose-gold text-white hover:shadow-lg hover:shadow-rose-blush/30 font-light py-6 text-lg rounded-2xl transition-all duration-300 hover:scale-[1.02]"
             >
-              {isValidating ? 'Validating...' : 'Enter'}
+              {isValidating ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Validating...</span>
+                </>
+              ) : 'Enter'}
             </Button>
           </form>
 
@@ -114,7 +124,7 @@ function BiometricScan({ onComplete }: { onComplete: () => void }) {
   const [scanning, setScanning] = useState(true)
   const [success, setSuccess] = useState(false)
 
-  useState(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setScanning(false)
       setSuccess(true)
@@ -123,7 +133,7 @@ function BiometricScan({ onComplete }: { onComplete: () => void }) {
     }, 2000)
 
     return () => clearTimeout(timer)
-  })
+  }, [onComplete])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pearl-white via-background to-lavender-mist/30 flex items-center justify-center p-6 relative overflow-hidden">
@@ -133,6 +143,8 @@ function BiometricScan({ onComplete }: { onComplete: () => void }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="text-center relative z-10"
+        aria-live="polite"
+        role="status"
       >
         <motion.div
           className="relative w-72 h-72 mx-auto mb-8"
@@ -149,9 +161,9 @@ function BiometricScan({ onComplete }: { onComplete: () => void }) {
             transition={{ duration: 0.5 }}
           >
             {success ? (
-              <Check className="w-32 h-32 text-rose-blush" strokeWidth={1.5} />
+              <Check className="w-32 h-32 text-rose-blush" strokeWidth={1.5} aria-hidden="true" />
             ) : (
-              <Lock className="w-32 h-32 text-rose-blush" strokeWidth={1.5} />
+              <Lock className="w-32 h-32 text-rose-blush" strokeWidth={1.5} aria-hidden="true" />
             )}
           </motion.div>
 
