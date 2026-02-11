@@ -546,7 +546,7 @@ The Sovereign Ecosystem connects to the broader ORGANVM system:
 
 | Organ | Relationship |
 |-------|-------------|
-| **ORGAN-I (Theoria)** | The [recursive-engine](https://github.com/organvm-i-theoria/recursive-engine) provides the epistemological framework for self-referential systems — the same pattern that drives the Sovereign Ecosystem's self-analyzing portfolio health engine. |
+| **ORGAN-I (Theoria)** | The [recursive-engine](https://github.com/organvm-i-theoria/recursive-engine--generative-entity) provides the epistemological framework for self-referential systems — the same pattern that drives the Sovereign Ecosystem's self-analyzing portfolio health engine. |
 | **ORGAN-II (Poiesis)** | The glassmorphism design language and constellation particle system draw from the generative art research in ORGAN-II's [metasystem-master](https://github.com/organvm-ii-poiesis/metasystem-master). |
 | **ORGAN-IV (Taxis)** | The [agentic-titan](https://github.com/organvm-iv-taxis/agentic-titan) orchestration framework provides the governance model for multi-agent workflows that could extend the AI concierge into a multi-model pipeline. |
 | **ORGAN-V (Logos)** | The public development narrative for ORGAN-III products is chronicled in ORGAN-V's [public-process](https://github.com/organvm-v-logos/public-process) essays. |
