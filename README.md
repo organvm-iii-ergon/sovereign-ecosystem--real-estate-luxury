@@ -5,6 +5,14 @@
 
 # The Sovereign Ecosystem — Luxury Real Estate Platform
 
+[![CI](https://github.com/organvm-iii-ergon/sovereign-ecosystem--real-estate-luxury/actions/workflows/ci.yml/badge.svg)](https://github.com/organvm-iii-ergon/sovereign-ecosystem--real-estate-luxury/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-pending-lightgrey)](https://github.com/organvm-iii-ergon/sovereign-ecosystem--real-estate-luxury)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/organvm-iii-ergon/sovereign-ecosystem--real-estate-luxury/blob/main/LICENSE)
+[![Organ III](https://img.shields.io/badge/Organ-III%20Ergon-F59E0B)](https://github.com/organvm-iii-ergon)
+[![Status](https://img.shields.io/badge/status-active-brightgreen)](https://github.com/organvm-iii-ergon/sovereign-ecosystem--real-estate-luxury)
+[![TypeScript](https://img.shields.io/badge/lang-TypeScript-informational)](https://github.com/organvm-iii-ergon/sovereign-ecosystem--real-estate-luxury)
+
+
 **An AI-powered luxury real estate analytics platform featuring augmented-reality property visualization, real-time multi-user collaboration, regulatory compliance automation, and a glassmorphism design language built for high-net-worth property management.**
 
 > **ORGAN-III (Ergon)** is the Commerce organ of the [ORGANVM system](https://github.com/organvm-iii-ergon) — the domain of products, services, and revenue-generating software. The Sovereign Ecosystem is one of ORGAN-III's flagship B2C applications: a full-stack property intelligence platform that synthesizes market analytics, AI-driven concierge services, and spatial computing into a single cohesive experience for luxury real estate professionals and their clients.
