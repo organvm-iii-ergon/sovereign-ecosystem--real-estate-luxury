@@ -1,104 +1,50 @@
 # CLAUDE.md — sovereign-ecosystem--real-estate-luxury
 
-**ORGAN III** (Commerce) · `organvm-iii-ergon/sovereign-ecosystem--real-estate-luxury`
-**Status:** ACTIVE · **Branch:** `main`
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What This Repo Is
+## What This Is
 
-Luxury real estate marketplace with blockchain verification
+**Sovereign Ecosystem** — luxury real estate marketplace with compliance intelligence. Dual-role platform (Agent / Client) for discovering, analyzing, and transacting ultra-high-net-worth properties. Features AI compliance analysis, risk mapping, blockchain-verified document vaults, AR property previews, and offline sync.
 
-## Stack
-
-**Languages:** TypeScript, CSS, JavaScript
-**Build:** pnpm
-
-## Directory Structure
-
-```
-📁 .github/
-📁 docs/
-    adr
-📁 src/
-    App.tsx
-    ErrorFallback.tsx
-    components
-    hooks
-    index.css
-    lib
-    main.css
-    main.tsx
-    styles
-    vite-end.d.ts
-  .gitignore
-  .spark-initial-sha
-  ANALYSIS_COMPLETE.md
-  CHANGELOG.md
-  COLLABORATION_FEATURES.md
-  EXECUTIVE_SUMMARY.md
-  EXPORT_EMAIL_COMPARISON_GUIDE.md
-  FEATURE_DEMO.md
-  IMPLEMENTATION_SUMMARY.md
-  LICENSE
-  OFFLINE_AR_COLLABORATION_DEMO.md
-  PRD.md
-  QUICK_REFERENCE.md
-  QUICK_START_NEW_FEATURES.md
-  README.md
-  SECURITY.md
-  SYSTEM_ANALYSIS.md
-  TEAM_PERFORMANCE_GUIDE.md
-  TEAM_PERFORMANCE_QUICK_REFERENCE.md
-  TESTING_DASHBOARD_GUIDE.md
-  TESTING_FEATURES_QUICK_REFERENCE.md
-  TESTING_GUIDE.md
-  TESTING_IMPLEMENTATION_SUMMARY.md
-  TESTING_NOTIFICATIONS_GUIDE.md
-  TESTING_NOTIFICATIONS_IMPLEMENTATION.md
-  TESTING_QUICK_START.md
-  TUTORIAL_FEATURES.md
-  components.json
-  debug_biometric.png
-  debug_dashboard_wait.png
-  debug_market_tab.png
-  eslint.config.js
-  index.html
-  package-lock.json
-  package.json
-  pnpm-lock.yaml
-  runtime.config.json
-  seed.yaml
-  spark.meta.json
-  success_market_overview.png
-  tailwind.config.js
-  theme.json
-  tsconfig.json
-  verify_market_overview.py
-  vite.config.ts
-```
-
-## Key Files
-
-- `README.md` — Project documentation
-- `package.json` — Dependencies and scripts
-- `seed.yaml` — ORGANVM orchestration metadata
-- `src/` — Main source code
-
-## Development
+## Commands
 
 ```bash
-pnpm install    # Install dependencies
-pnpm build      # Build all packages
-pnpm test       # Run tests
-pnpm dev        # Start development server
+pnpm install         # Install dependencies
+pnpm run dev         # Vite dev server (port 5000)
+pnpm run build       # tsc + vite build
+pnpm run lint        # ESLint
+pnpm run test        # Vitest (no test suite yet)
 ```
 
-## ORGANVM Context
+## Architecture
 
-This repository is part of the **ORGANVM** eight-organ creative-institutional system.
-It belongs to **ORGAN III (Commerce)** under the `organvm-iii-ergon` GitHub organization.
+GitHub Spark app: React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui, Framer Motion. Uses **pnpm** (not npm).
 
-**Registry:** [`registry-v2.json`](https://github.com/meta-organvm/organvm-corpvs-testamentvm/blob/main/registry-v2.json)
-**Corpus:** [`organvm-corpvs-testamentvm`](https://github.com/meta-organvm/organvm-corpvs-testamentvm)
+**App entry**: `src/App.tsx` — role-gated shell. User selects Agent or Client role; state persisted via `useKV`. Role determines which dashboard is shown.
+
+**Core flows**:
+- Agent: `AgentDashboard` → properties, client management, team, market analytics
+- Client: `ClientFeed` → property discovery, compliance status, appointment booking
+
+**Key components** (`src/components/`):
+- **Property intelligence**: `MarketOverview`, `PatternAlertNotifications`, `LiveAlertToast`
+- **Compliance**: `analyzeProperty()` (from `src/lib/compliance.ts`) classifies each property; `getWatchlistProperties()`, `getRiskMapProperties()`
+- **AI tools**: `AIConcierge`, `OfflineSyncIndicator`
+- **Client experience**: `ClientAuth`, `RoleSelector`, `PrivateVault`
+- **Team management**: `TeamManagementDashboard`
+- **UX**: `ParticleBackground`, `FloatingElements`, `ThemeToggle`, `LanguageDetectionBanner`
+
+**Sound system**: `src/lib/sound-manager.ts` provides theme-aware sound effects; mutable via `soundEnabled` toggle.
+
+**Market data**: `src/lib/market-data.ts` — `marketDataService.initialize(properties)` on mount, `cleanup()` on unmount.
+
+**State**: `properties` and `documents` via `useKV`; role, auth, and sound are local `useState`.
+
+**Path alias**: `@/*` → `src/*`
+
+## Deployment
+
+Live at **https://sovereign-ecosystem.netlify.app** (Netlify, `main` branch auto-deploys).
 
 <!-- ORGANVM:AUTO:START -->
 ## System Context (auto-generated — do not edit)
